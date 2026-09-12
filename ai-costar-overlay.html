@@ -2264,7 +2264,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           return !!(
             t &&
             t.closest &&
-            t.closest("#panel, #gearBtn, #hud, #textFallback, #camPrompt")
+            t.closest(
+              "#panel, #gearBtn, #hud, #textFallback, #camPrompt, #captions, .subtitle-bar, #selfCam, .bubble"
+            )
           );
         }
         function readVals() {
@@ -2555,6 +2557,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
         const onDragStart = (e) => {
           if (e.target.closest('button, input, select, .subtitle-resize-handle, .subtitle-actions')) return;
+          e.stopPropagation();
           isDragging = true;
           if (el.captions) el.captions.classList.add("is-dragging");
 
@@ -2608,14 +2611,19 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         };
 
         if (el.subtitleDragHandle) {
-          el.subtitleDragHandle.addEventListener('pointerdown', onDragStart);
-          el.subtitleDragHandle.addEventListener('dblclick', () => {
+          el.subtitleDragHandle.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            onDragStart(e);
+          });
+          el.subtitleDragHandle.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
             resetSubtitleLayout();
           });
         }
         if (el.subtitleBar) {
           el.subtitleBar.addEventListener('pointerdown', (e) => {
             if (e.target === el.subtitleBar || e.target.classList.contains('subtitle-content') || e.target.classList.contains('subtitle-drag-handle')) {
+              e.stopPropagation();
               onDragStart(e);
             }
           });
