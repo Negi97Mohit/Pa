@@ -1,0 +1,15 @@
+# Secret environment variables and keys (CRITICAL - DO NOT COMMIT)
+.env
+.env.*
+.env.local
+.env.*.local
+!.env.example
+env.js
+
+# Dependency directories
+node_modules/
+
+# OS and temporary files
+.DS_Store
+Thumbs.db
+*.log

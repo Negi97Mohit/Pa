@@ -1,0 +1,4809 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Co-Star Overlay</title>
+    <style>
+      :root {
+        --bg-panel: #0b0e14;
+        --bg-panel-2: #11151d;
+        --hairline: #232a36;
+        --text: #e7ecf2;
+        --text-dim: #8994a3;
+        --tally: #f5a623;
+        --tally-live: #ff3b3b;
+        --ok: #46d38a;
+        --warn: #f5a623;
+        --err: #ff5d5d;
+        --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+        --sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+          sans-serif;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+      }
+      body.bg-chroma {
+        background: #00ff00;
+      }
+      #viewport {
+        position: fixed;
+        inset: 0;
+        z-index: 2;
+        cursor: grab;
+        touch-action: none;
+        background: transparent;
+      }
+      body.dragging-avatar {
+        cursor: grabbing !important;
+      }
+      body.rotating-avatar {
+        cursor: ew-resize !important;
+      }
+      #viewport canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+      }
+
+      #selfCam {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        display: none;
+        overflow: hidden;
+        background: #000;
+      }
+      #selfCam.active {
+        display: block;
+      }
+      #selfCam video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      #selfCam video.mirror {
+        transform: scaleX(-1);
+      }
+
+      #camPrompt {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(14, 18, 26, 0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        font-family: var(--sans);
+      }
+      #camPrompt.hidden {
+        display: none !important;
+      }
+      #camPrompt .promptCard {
+        background: #151a24;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 28px 32px;
+        max-width: 380px;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      }
+      #camPrompt button.primary {
+        background: var(--tally);
+        border: none;
+        color: #1a1200;
+        font-weight: 700;
+        font-size: 15px;
+        padding: 13px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(245, 166, 35, 0.35);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        display: block;
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      #camPrompt button.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 28px rgba(245, 166, 35, 0.5);
+      }
+      #camPrompt button.secondary {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: var(--text-dim);
+        font-weight: 600;
+        font-size: 13px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: block;
+        width: 100%;
+      }
+      #camPrompt button.secondary:hover {
+        color: var(--text);
+        border-color: rgba(255, 255, 255, 0.35);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      #hud {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(11, 14, 20, 0.72);
+        border: 1px solid var(--hairline);
+        border-radius: 7px;
+        padding: 7px 12px 7px 10px;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--text-dim);
+        backdrop-filter: blur(6px);
+        transition: opacity 0.2s ease;
+      }
+      #hud .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #3a4150;
+        flex: none;
+        transition:
+          background 0.2s,
+          box-shadow 0.2s;
+      }
+      #hud .dot.live {
+        background: var(--tally-live);
+        box-shadow: 0 0 8px 1px rgba(255, 59, 59, 0.7);
+      }
+      #hud .dot.ready {
+        background: var(--ok);
+        box-shadow: 0 0 6px 1px rgba(70, 211, 138, 0.6);
+      }
+      #hud .dot.warn {
+        background: var(--warn);
+        box-shadow: 0 0 6px 1px rgba(245, 166, 35, 0.6);
+      }
+      #hud .dot.wake-wait {
+        background: #4a75a0;
+        box-shadow: 0 0 7px 1px rgba(74, 117, 160, 0.6);
+        animation: hudPulse 2.4s infinite ease-in-out;
+      }
+      #hud .dot.wake-hearing {
+        background: #ffaa00;
+        box-shadow: 0 0 10px 2px rgba(255, 170, 0, 0.85);
+        animation: hudFastPulse 0.9s infinite alternate;
+      }
+      #hud .dot.wake-processing {
+        background: #9b51e0;
+        box-shadow: 0 0 8px 2px rgba(155, 81, 224, 0.75);
+      }
+      @keyframes hudPulse {
+        0%, 100% { opacity: 0.5; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.15); }
+      }
+      @keyframes hudFastPulse {
+        from { transform: scale(1); opacity: 0.85; }
+        to { transform: scale(1.25); opacity: 1; }
+      }
+      #hud span.label {
+        letter-spacing: 0.04em;
+      }
+      #hud .sep {
+        width: 1px;
+        height: 12px;
+        background: var(--hairline);
+      }
+
+      #gearBtn {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 21;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(11, 14, 20, 0.78);
+        border: 1px solid var(--hairline);
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 17px;
+        backdrop-filter: blur(6px);
+      }
+      #gearBtn:hover {
+        color: var(--text);
+        border-color: #3a4150;
+      }
+
+      .chrome-hidden #hud,
+      .chrome-hidden #gearBtn,
+      .chrome-hidden #panel {
+        display: none !important;
+      }
+
+      #panel {
+        position: fixed;
+        bottom: 64px;
+        right: 16px;
+        z-index: 22;
+        width: 360px;
+        max-height: calc(100vh - 96px);
+        overflow-y: auto;
+        background: var(--bg-panel);
+        border: 1px solid var(--hairline);
+        border-radius: 10px;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+        display: none;
+      }
+      #panel.open {
+        display: block;
+      }
+      #panel h2 {
+        margin: 0;
+        padding: 12px 14px;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        background: var(--bg-panel-2);
+        border-bottom: 1px solid var(--hairline);
+        border-radius: 10px 10px 0 0;
+        font-family: var(--mono);
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+      .section {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--hairline);
+      }
+      .section:last-child {
+        border-bottom: none;
+      }
+      .section h3 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        color: var(--text-dim);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .row:last-child {
+        margin-bottom: 0;
+      }
+      .row label {
+        flex: 0 0 auto;
+        color: var(--text-dim);
+        font-size: 12px;
+        min-width: 70px;
+      }
+      .row input[type="text"],
+      .row input[type="number"],
+      .row input[type="password"],
+      .row select,
+      textarea {
+        flex: 1;
+        background: #161b24;
+        border: 1px solid var(--hairline);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 6px 8px;
+        font-family: var(--sans);
+        font-size: 12.5px;
+        min-width: 0;
+      }
+      textarea {
+        width: 100%;
+        min-height: 64px;
+        resize: vertical;
+        font-family: var(--sans);
+        box-sizing: border-box;
+      }
+      .row input[type="range"] {
+        flex: 1;
+        accent-color: var(--tally);
+      }
+      .row .val {
+        width: 34px;
+        text-align: right;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        font-size: 11px;
+      }
+      .btnrow {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      button.pill {
+        background: #161b24;
+        border: 1px solid var(--hairline);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        font-family: var(--sans);
+      }
+      button.pill:hover {
+        border-color: #3a4150;
+      }
+      button.pill.active {
+        background: var(--tally);
+        border-color: var(--tally);
+        color: #1a1200;
+        font-weight: 600;
+      }
+      button.pill:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+      button.wide {
+        width: 100%;
+      }
+      button.primary {
+        background: var(--tally);
+        color: #1a1200;
+        border: none;
+        font-weight: 600;
+      }
+      button.danger {
+        color: var(--err);
+        border-color: #4a2323;
+      }
+      .toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .switch {
+        position: relative;
+        width: 36px;
+        height: 20px;
+        flex: none;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider-tog {
+        position: absolute;
+        inset: 0;
+        background: #2a303c;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .slider-tog:before {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        left: 2px;
+        top: 2px;
+        background: #e7ecf2;
+        border-radius: 50%;
+        transition: 0.15s;
+      }
+      input:checked + .slider-tog {
+        background: var(--tally);
+      }
+      input:checked + .slider-tog:before {
+        transform: translateX(16px);
+      }
+      #dropZone {
+        border: 1.5px dashed var(--hairline);
+        border-radius: 8px;
+        padding: 14px;
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 12px;
+        cursor: pointer;
+        margin-bottom: 8px;
+      }
+      #dropZone.drag {
+        border-color: var(--tally);
+        color: var(--text);
+      }
+      #loaderStatus {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.5;
+      }
+      .note {
+        color: var(--text-dim);
+        font-size: 11px;
+        line-height: 1.5;
+        margin-top: 6px;
+      }
+      small.hint {
+        display: block;
+        color: var(--text-dim);
+        font-size: 10.5px;
+        margin-top: 3px;
+      }
+
+      /* ---------- provider control-center additions ---------- */
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid var(--hairline);
+        color: var(--text-dim);
+      }
+      .badge .bdot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3a4150;
+      }
+      .badge.ok .bdot {
+        background: var(--ok);
+        box-shadow: 0 0 5px 1px rgba(70, 211, 138, 0.6);
+      }
+      .badge.warn .bdot {
+        background: var(--warn);
+        box-shadow: 0 0 5px 1px rgba(245, 166, 35, 0.6);
+      }
+      .badge.err .bdot {
+        background: var(--err);
+        box-shadow: 0 0 5px 1px rgba(255, 93, 93, 0.6);
+      }
+      .keyrow {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .keyrow input {
+        flex: 1;
+        font-family: var(--mono);
+        letter-spacing: 0.03em;
+      }
+      .usage-box {
+        background: #0e121a;
+        border: 1px solid var(--hairline);
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.6;
+        margin-top: 6px;
+      }
+      .usage-box .u-title {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .usage-bar {
+        height: 4px;
+        border-radius: 2px;
+        background: #232a36;
+        margin-top: 5px;
+        overflow: hidden;
+      }
+      .usage-bar > i {
+        display: block;
+        height: 100%;
+        background: var(--tally);
+      }
+      .provider-status-line {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 2px 0 8px;
+        font-size: 11.5px;
+        color: var(--text-dim);
+      }
+      .spinner {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        border: 2px solid #3a4150;
+        border-top-color: var(--tally);
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .model-meta {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        color: var(--text-dim);
+        line-height: 1.5;
+        margin-top: 4px;
+      }
+      .err-box {
+        background: rgba(255, 93, 93, 0.08);
+        border: 1px solid #4a2323;
+        color: #ffb2b2;
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-size: 11.5px;
+        line-height: 1.5;
+        margin-top: 6px;
+      }
+      .err-box b {
+        display: block;
+        margin-bottom: 2px;
+        color: #ff8f8f;
+      }
+
+      #captions {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 24px;
+        z-index: 30;
+        width: min(860px, 92vw);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+        font-family: var(--sans);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+      }
+      #captions.hidden {
+        display: none !important;
+      }
+      .subtitle-bar {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(13, 17, 24, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.2);
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      }
+      .subtitle-bar.mode-mic-off {
+        border-color: rgba(255, 93, 93, 0.45);
+        background: rgba(26, 15, 18, 0.94);
+      }
+      .subtitle-bar.mode-interim {
+        border-color: rgba(70, 211, 138, 0.65);
+        box-shadow: 0 0 20px rgba(70, 211, 138, 0.25), 0 12px 36px rgba(0, 0, 0, 0.55);
+      }
+      .subtitle-bar.mode-wake-recording {
+        border-color: rgba(255, 180, 50, 0.9);
+        box-shadow: 0 0 24px rgba(255, 180, 50, 0.35), 0 12px 36px rgba(0, 0, 0, 0.55);
+        background: rgba(28, 22, 12, 0.94);
+      }
+      .subtitle-bar.mode-avatar {
+        border-color: rgba(245, 166, 35, 0.85);
+        box-shadow: 0 0 24px rgba(245, 166, 35, 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
+        background: rgba(24, 20, 14, 0.94);
+      }
+      .subtitle-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .subtitle-pill.pill-standby {
+        background: rgba(70, 211, 138, 0.15);
+        color: #46d38a;
+        border: 1px solid rgba(70, 211, 138, 0.35);
+      }
+      .subtitle-pill.pill-you {
+        background: rgba(56, 139, 253, 0.2);
+        color: #79b8ff;
+        border: 1px solid rgba(56, 139, 253, 0.4);
+      }
+      .subtitle-pill.pill-wake {
+        background: rgba(255, 180, 50, 0.25);
+        color: #ffd276;
+        border: 1px solid rgba(255, 180, 50, 0.6);
+        animation: pulseWake 1.2s infinite ease-in-out;
+      }
+      @keyframes pulseWake {
+        0%, 100% { box-shadow: 0 0 6px rgba(255, 180, 50, 0.3); }
+        50% { box-shadow: 0 0 14px rgba(255, 180, 50, 0.7); }
+      }
+      .subtitle-pill.pill-avatar {
+        background: rgba(245, 166, 35, 0.25);
+        color: #ffc966;
+        border: 1px solid rgba(245, 166, 35, 0.5);
+      }
+      .subtitle-pill.pill-off {
+        background: rgba(255, 93, 93, 0.2);
+        color: #ff8e8e;
+        border: 1px solid rgba(255, 93, 93, 0.4);
+      }
+      .subtitle-content {
+        flex: 1;
+        min-width: 0;
+        font-size: 15.5px;
+        line-height: 1.45;
+        color: #f0f3f6;
+        word-break: break-word;
+      }
+      .subtitle-content.standby-hint {
+        color: #8b949e;
+      }
+      .subtitle-content .wake-highlight {
+        color: #ffd276;
+        font-weight: 700;
+        text-shadow: 0 0 10px rgba(255, 180, 50, 0.4);
+      }
+      .subtitle-content .avatar-highlight {
+        color: #ffdf9e;
+      }
+      .subtitle-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      .subtitle-btn {
+        background: var(--tally);
+        border: none;
+        color: #1a1200;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 6px 12px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
+      }
+      .subtitle-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245, 166, 35, 0.5);
+      }
+      .subtitle-badge {
+        font-size: 10.5px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .bubble {
+        max-width: 680px;
+        min-width: 160px;
+        padding: 9px 16px;
+        border-radius: 12px;
+        font-size: 16px;
+        line-height: 1.45;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease,
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        position: relative;
+        word-break: break-word;
+      }
+      .bubble.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .bubble .speaker-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-right: 8px;
+        padding: 2px 7px;
+        border-radius: 6px;
+        vertical-align: middle;
+      }
+      .bubble .caption-text {
+        vertical-align: middle;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.85);
+      }
+      .bubble.you {
+        align-self: flex-end;
+        background: rgba(18, 23, 33, 0.92);
+        color: #d6e8ff;
+        border: 1px solid rgba(80, 150, 255, 0.22);
+      }
+      .bubble.you .speaker-tag {
+        background: rgba(45, 125, 245, 0.25);
+        color: #7ab7ff;
+        border: 1px solid rgba(120, 180, 255, 0.35);
+      }
+      .bubble.you.live-interim {
+        border-color: rgba(70, 211, 138, 0.6);
+        box-shadow: 0 0 16px rgba(70, 211, 138, 0.25), 0 8px 24px rgba(0,0,0,0.4);
+      }
+      .bubble.you.wake-recording {
+        border-color: rgba(255, 180, 50, 0.85);
+        box-shadow: 0 0 20px rgba(255, 180, 50, 0.4), 0 8px 24px rgba(0,0,0,0.4);
+      }
+      .bubble.you.wake-recording .speaker-tag {
+        background: rgba(255, 170, 0, 0.3);
+        color: #ffd276;
+        border-color: rgba(255, 190, 60, 0.6);
+      }
+      .bubble.avatar {
+        align-self: flex-start;
+        background: rgba(245, 166, 35, 0.95);
+        color: #1a1200;
+        font-weight: 600;
+        border: 1px solid rgba(255, 215, 110, 0.5);
+      }
+      .bubble.avatar .speaker-tag {
+        background: rgba(0, 0, 0, 0.2);
+        color: #2b1d02;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+      }
+      .bubble.avatar .caption-text {
+        text-shadow: none;
+      }
+
+      #textFallback {
+        position: fixed;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        display: none;
+        gap: 6px;
+      }
+      #textFallback.show {
+        display: flex;
+      }
+      #textFallback input {
+        width: 280px;
+        background: rgba(11, 14, 20, 0.82);
+        border: 1px solid var(--hairline);
+        color: var(--text);
+        border-radius: 7px;
+        padding: 8px 10px;
+        font-family: var(--sans);
+        font-size: 13px;
+      }
+      #textFallback button {
+        background: var(--tally);
+        border: none;
+        color: #1a1200;
+        border-radius: 7px;
+        padding: 0 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="viewport"></div>
+
+    <div id="selfCam">
+      <video id="selfCamVideo" autoplay playsinline muted></video>
+    </div>
+
+    <div id="camPrompt">
+      <div class="promptCard">
+        <h3 style="margin: 0 0 8px; color: var(--text); font-size: 18px; font-weight: 700;">🎥 Co-Star Camera</h3>
+        <p style="margin: 0 0 16px; font-size: 13px; color: var(--text-dim); line-height: 1.45;">
+          Click to let your co-host join you on camera, or skip to use the 3D Panda without camera.
+        </p>
+        <button id="camPromptBtn" class="primary">🎥 Enable Camera</button>
+        <button id="camPromptSkip" class="secondary" type="button">Skip (Panda Only)</button>
+      </div>
+    </div>
+
+    <div id="hud">
+      <div class="dot" id="dotMic"></div>
+      <span class="label">MIC</span>
+      <div class="sep"></div>
+      <div class="dot" id="dotAI"></div>
+      <span class="label">AI</span>
+      <div class="sep"></div>
+      <div class="dot" id="dotTalk"></div>
+      <span class="label">ON AIR</span>
+      <div class="sep"></div>
+      <div class="dot" id="dotWake"></div>
+      <span class="label" id="labelWake">OK PA</span>
+    </div>
+
+    <button id="gearBtn" title="Settings (H to hide all UI)">⚙</button>
+
+    <div id="panel">
+      <h2>Co-Star Setup</h2>
+
+      <div class="section">
+        <h3>Model</h3>
+        <div id="dropZone">
+          Drop the .glb here, or click to choose<br /><small class="hint"
+            >Auto-loads "rigged-model.glb" next to this page when served over
+            http(s)</small
+          >
+        </div>
+        <input type="file" id="fileInput" accept=".glb" style="display: none" />
+        <div id="loaderStatus">Waiting…</div>
+        <div class="btnrow" style="margin-top: 8px">
+          <button class="pill" data-frame="full">Full body</button>
+          <button class="pill active" data-frame="upper">Upper body</button>
+          <button class="pill" data-frame="bust">Bust</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Persona</h3>
+        <div class="row">
+          <label>Avatar name</label
+          ><input type="text" id="avatarName" value="Panda" />
+        </div>
+        <div class="row">
+          <label>Streamer</label
+          ><input type="text" id="streamerName" value="" />
+        </div>
+        <textarea id="personaPrompt">
+You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a livestream. Answer viewer questions in 1–3 short, conversational sentences that sound natural read aloud. Keep it friendly and concise, never robotic.</textarea
+        >
+        <small class="hint"
+          >{avatar} and {streamer} are filled in automatically.</small
+        >
+      </div>
+
+      <div class="section" id="sttSection">
+        <h3>
+          <span>Speech Recognition (STT)</span>
+          <span class="badge" id="sttBadge"><span class="bdot"></span><span id="sttBadgeText">checking…</span></span>
+        </h3>
+        <div class="toggle row">
+          <label style="min-width: auto">Microphone enabled</label>
+          <label class="switch"><input type="checkbox" id="micToggle" /><span class="slider-tog"></span></label>
+        </div>
+        <div class="row">
+          <label>STT Provider</label>
+          <select id="sttProviderSelect">
+            <option value="deepgram">Deepgram (Live Streaming - Fast & Reliable)</option>
+            <option value="webspeech">Browser Web Speech API (Fallback)</option>
+          </select>
+        </div>
+        <div id="sttKeyRow" class="keyrow">
+          <input type="password" id="sttKeyInput" placeholder="Deepgram API Key" />
+          <button class="pill" id="sttKeySave">Save</button>
+          <button class="pill danger" id="sttKeyRemove">Remove</button>
+        </div>
+        <div id="sttKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
+
+        <div class="toggle row" style="margin-top: 10px;">
+          <label style="min-width: auto">Wake-Word Mode ("OK Pa")</label>
+          <label class="switch"><input type="checkbox" id="wakeWordToggle" checked /><span class="slider-tog"></span></label>
+        </div>
+        <div class="row" id="wakePhraseRow">
+          <label>Wake Phrase</label>
+          <input type="text" id="wakePhraseInput" value="OK Pa" placeholder="e.g. OK Pa" />
+        </div>
+        <small class="hint">Panda only listens and replies when you say this phrase, like Siri or OK Google.</small>
+
+        <div class="toggle row" style="margin-top: 10px;">
+          <label style="min-width: auto">Live Subtitles</label>
+          <label class="switch"><input type="checkbox" id="subtitlesToggle" checked /><span class="slider-tog"></span></label>
+        </div>
+        <div class="toggle row">
+          <label style="min-width: auto">Text fallback box</label>
+          <label class="switch"><input type="checkbox" id="textFallbackToggle" checked /><span class="slider-tog"></span></label>
+        </div>
+        <div class="btnrow" style="margin-top: 8px">
+          <button class="pill" id="sttTestBtn">Test Microphone & STT</button>
+          <button class="pill" id="subtitlesPreviewBtn">👁️ Preview Subtitles</button>
+        </div>
+        <div id="sttStatusNote" class="note" style="margin-top: 6px;">
+          Deepgram streams audio via WebSockets with sub-second real-time interim subtitles.
+        </div>
+      </div>
+
+      <div class="section" id="aiSection">
+        <h3>
+          <span>AI Provider</span
+          ><span class="badge" id="aiBadge"
+            ><span class="bdot"></span
+            ><span id="aiBadgeText">checking…</span></span
+          >
+        </h3>
+        <div class="row">
+          <label>Provider</label
+          ><select id="aiProviderSelect"></select>
+        </div>
+        <div id="aiKeyRow" class="keyrow" style="display: none">
+          <input type="password" id="aiKeyInput" placeholder="Paste API key" />
+          <button class="pill" id="aiKeySave">Save</button>
+          <button class="pill danger" id="aiKeyRemove">Remove</button>
+          <button class="pill" id="aiKeyToggle" title="Switch between new ↔ old .env key" style="display:none">⇄ Old</button>
+        </div>
+        <div id="aiKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
+        <div class="row" id="aiModelRow">
+          <label>Model</label>
+          <select id="aiModelSelect"></select>
+          <button class="pill" id="aiModelRefresh" title="Refresh model list">
+            ⟳
+          </button>
+        </div>
+        <div class="row" id="aiModelSearchRow" style="display: none">
+          <label>Search</label
+          ><input type="text" id="aiModelSearch" placeholder="Filter models…" />
+        </div>
+        <div class="model-meta" id="aiModelMeta"></div>
+        <div class="btnrow" style="margin-top: 8px">
+          <button class="pill" id="aiTestBtn">Test Connection</button>
+        </div>
+        <div id="aiErrorBox"></div>
+      </div>
+
+      <div class="section" id="ttsSection">
+        <h3>
+          <span>Voice (TTS)</span
+          ><span class="badge" id="ttsBadge"
+            ><span class="bdot"></span
+            ><span id="ttsBadgeText">checking…</span></span
+          >
+        </h3>
+        <div class="row">
+          <label>Provider</label
+          ><select id="ttsProviderSelect"></select>
+        </div>
+        <div id="ttsKeyRow" class="keyrow" style="display: none">
+          <input type="password" id="ttsKeyInput" placeholder="Paste API key" />
+          <button class="pill" id="ttsKeySave">Save</button>
+          <button class="pill danger" id="ttsKeyRemove">Remove</button>
+          <button class="pill" id="ttsKeyToggle" title="Switch between new ↔ old .env key" style="display:none">⇄ Old</button>
+        </div>
+        <div id="ttsKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
+        <div class="row" id="ttsModelRow">
+          <label>Model</label>
+          <select id="ttsModelSelect"></select>
+          <button class="pill" id="ttsModelRefresh" title="Refresh">⟳</button>
+        </div>
+        <div class="row" id="ttsVoiceRow">
+          <label>Voice</label>
+          <select id="ttsVoiceSelect"></select>
+        </div>
+        <div class="row">
+          <label>Stability</label
+          ><input
+            type="range"
+            id="voiceStability"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.45"
+          /><span class="val" id="voiceStabilityVal">0.45</span>
+        </div>
+        <div class="row">
+          <label>Similarity</label
+          ><input
+            type="range"
+            id="voiceSimilarity"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.85"
+          /><span class="val" id="voiceSimilarityVal">0.85</span>
+        </div>
+        <div class="row">
+          <label>Style</label
+          ><input
+            type="range"
+            id="voiceStyle"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.35"
+          /><span class="val" id="voiceStyleVal">0.35</span>
+        </div>
+        <div class="row">
+          <label>Speed</label
+          ><input
+            type="range"
+            id="voiceSpeed"
+            min="0.7"
+            max="1.3"
+            step="0.01"
+            value="1.0"
+          /><span class="val" id="voiceSpeedVal">1.00</span>
+        </div>
+        <div class="btnrow" style="margin-top: 8px">
+          <button class="pill" id="ttsTestBtn">Test Connection</button>
+          <button class="pill" id="ttsPreviewBtn">Preview Voice</button>
+        </div>
+        <div class="usage-box" id="ttsUsageBox">
+          Usage information unavailable
+        </div>
+        <div id="ttsErrorBox"></div>
+        <div class="note">
+          Provider-specific knobs are abstracted to these four sliders; each
+          adapter maps them onto whatever parameters that provider actually
+          exposes.
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Framing</h3>
+        <div class="row">
+          <label>Scale</label
+          ><input
+            type="range"
+            id="scaleRange"
+            min="0.05"
+            max="3"
+            step="0.01"
+            value="1"
+          /><span class="val" id="scaleVal">1.00</span>
+        </div>
+        <div class="row">
+          <label>X offset</label
+          ><input
+            type="range"
+            id="xRange"
+            min="-1"
+            max="1"
+            step="0.01"
+            value="0"
+          /><span class="val" id="xVal">0.00</span>
+        </div>
+        <div class="row">
+          <label>Y offset</label
+          ><input
+            type="range"
+            id="yRange"
+            min="-1"
+            max="1"
+            step="0.01"
+            value="0"
+          /><span class="val" id="yVal">0.00</span>
+        </div>
+        <div class="row">
+          <label>Turn</label
+          ><input
+            type="range"
+            id="rotRange"
+            min="-45"
+            max="45"
+            step="1"
+            value="-12"
+          /><span class="val" id="rotVal">-12</span>
+        </div>
+        <button class="pill wide" id="resetFraming">Reset framing</button>
+        <div class="note">
+          You can also grab {avatar} directly anywhere on screen: <b>drag</b> to
+          move, <b>scroll</b> to resize, <b>right-drag</b> or
+          <b>shift-drag</b> to turn, <b>double-click</b> to reset. Sliders stay
+          in sync.
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Camera</h3>
+        <div class="toggle row">
+          <label style="min-width: auto">Camera on</label>
+          <label class="switch"
+            ><input type="checkbox" id="camToggle" /><span
+              class="slider-tog"
+            ></span
+          ></label>
+        </div>
+        <div class="toggle row">
+          <label style="min-width: auto">Mirror preview</label>
+          <label class="switch"
+            ><input type="checkbox" id="camMirrorToggle" checked /><span
+              class="slider-tog"
+            ></span
+          ></label>
+        </div>
+        <div id="camStatus" class="note">Camera is off.</div>
+      </div>
+
+      <div class="section">
+        <h3>Background (for capture)</h3>
+        <div class="btnrow">
+          <button class="pill active" data-bg="transparent">Transparent</button>
+          <button class="pill" data-bg="chroma">Chroma green</button>
+        </div>
+        <div class="note">
+          <b>Transparent</b> — use as an OBS <i>Browser Source</i>; OBS
+          composites real alpha, no keying needed.<br /><br />
+          <b>Chroma green</b> — open this page in your normal desktop Chrome,
+          then capture that window in OBS with <i>Window Capture</i> + a
+          <i>Chroma Key</i> filter.
+        </div>
+      </div>
+    </div>
+
+    <div id="textFallback" class="show">
+      <input
+        type="text"
+        id="textInput"
+        placeholder="Type a question and press Enter…"
+      />
+    </div>
+
+    <div id="captions">
+      <div class="subtitle-bar" id="subtitleBar">
+        <div class="subtitle-pill pill-standby" id="subtitlePill">🎙️ Live STT</div>
+        <div class="subtitle-content standby-hint" id="subtitleContent">
+          Waiting for wake phrase. Say <strong class="wake-highlight">"OK Pa"</strong> to talk to Panda!
+        </div>
+        <div class="subtitle-actions">
+          <button id="subtitleMicBtn" class="subtitle-btn" style="display:none;" title="Turn on microphone">🎙️ Turn On Mic</button>
+          <span class="subtitle-badge" id="subtitleBadge">DEEPGRAM LIVE 🟢</span>
+        </div>
+      </div>
+      <!-- Hidden legacy elements for compatibility -->
+      <div style="display:none;" id="bubbleYou"><span id="tagYou"></span><span id="textYou"></span></div>
+      <div style="display:none;" id="bubbleAvatar"><span id="tagAvatar"></span><span id="textAvatar"></span></div>
+    </div>
+
+    <!-- Load API keys from env.js (synced from .env by server.js or edited manually) -->
+    <script src="env.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+      /* ============================================================================
+   SETTINGS PERSISTENCE (v2 — adds AI/TTS provider+model+voice selection and
+   generic voice-setting sliders. API keys are NOT stored in this object —
+   see SecureStorage below, which keeps them in a separate namespaced bucket
+   so they never get logged/exported alongside ordinary settings.)
+   ========================================================================= */
+      const SETTINGS_KEY = "ai-costar-overlay-settings-v2";
+      const defaults = {
+        avatarName: "Panda",
+        streamerName: "",
+        personaPrompt: document.getElementById("personaPrompt").value,
+        micOn: false,
+        textFallback: true,
+        scale: 1,
+        x: 0,
+        y: 0,
+        rot: -12,
+        frame: "upper",
+        bg: "transparent",
+        camOn: false,
+        camMirror: true,
+        aiProvider: "openrouter",
+        aiModel: "",
+        ttsProvider: "browser",
+        ttsModel: "",
+        ttsVoice: "",
+        sttProvider: "deepgram",
+        wakeWordMode: true,
+        wakePhrase: "OK Pa",
+        subtitlesEnabled: true,
+        voiceSettings: {
+          stability: 0.45,
+          similarity: 0.85,
+          style: 0.35,
+          speed: 1.0,
+        },
+      };
+      function loadSettings() {
+        try {
+          const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+          const s = {
+            ...defaults,
+            ...raw,
+            voiceSettings: {
+              ...defaults.voiceSettings,
+              ...(raw.voiceSettings || {}),
+            },
+          };
+          if (!s.wakePhrase) s.wakePhrase = "OK Pa";
+          if (s.wakeWordMode === undefined) s.wakeWordMode = true;
+          if (s.subtitlesEnabled === undefined) s.subtitlesEnabled = true;
+          if (!s.sttProvider) s.sttProvider = "deepgram";
+          if (s.aiProvider === "gemini-local" && typeof SecureStorage !== "undefined" && SecureStorage.has("openrouter")) {
+            s.aiProvider = "openrouter";
+          }
+          return s;
+        } catch (e) {
+          return JSON.parse(JSON.stringify(defaults));
+        }
+      }
+      function saveSettings() {
+        const s = {
+          avatarName: el.avatarName.value,
+          streamerName: el.streamerName.value,
+          personaPrompt: el.personaPrompt.value,
+          micOn: el.micToggle.checked,
+          textFallback: el.textFallbackToggle.checked,
+          scale: parseFloat(el.scaleRange.value),
+          x: parseFloat(el.xRange.value),
+          y: parseFloat(el.yRange.value),
+          rot: parseFloat(el.rotRange.value),
+          frame: currentFrame,
+          bg: currentBg,
+          camOn: el.camToggle.checked,
+          camMirror: el.camMirrorToggle.checked,
+          aiProvider: settings.aiProvider,
+          aiModel: settings.aiModel,
+          ttsProvider: settings.ttsProvider,
+          ttsModel: settings.ttsModel,
+          ttsVoice: settings.ttsVoice,
+          voiceSettings: settings.voiceSettings,
+          sttProvider: el.sttProviderSelect ? el.sttProviderSelect.value : (settings.sttProvider || "deepgram"),
+          wakeWordMode: el.wakeWordToggle ? el.wakeWordToggle.checked : (settings.wakeWordMode !== false),
+          wakePhrase: el.wakePhraseInput ? (el.wakePhraseInput.value.trim() || "OK Pa") : (settings.wakePhrase || "OK Pa"),
+          subtitlesEnabled: el.subtitlesToggle ? el.subtitlesToggle.checked : (settings.subtitlesEnabled !== false),
+        };
+        settings.sttProvider = s.sttProvider;
+        settings.wakeWordMode = s.wakeWordMode;
+        settings.wakePhrase = s.wakePhrase;
+        settings.subtitlesEnabled = s.subtitlesEnabled;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+      }
+
+      /* Small helpers reused across the provider layer */
+      function debounce(fn, ms) {
+        let t;
+        return (...a) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...a), ms);
+        };
+      }
+      function maskKey(k) {
+        if (!k) return "";
+        if (k.length <= 8) return "•".repeat(k.length);
+        return (
+          k.slice(0, 3) + "•".repeat(Math.max(4, k.length - 7)) + k.slice(-4)
+        );
+      }
+      function fmtNum(n) {
+        return typeof n === "number" ? n.toLocaleString() : n;
+      }
+      async function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      // fetch with a hard timeout, one automatic retry on transient network errors
+      // (never retries on 4xx — those are real errors, not flukes) and support for
+      // an external AbortSignal so in-flight requests can be cancelled on barge-in.
+      async function fetchTimeout(
+        url,
+        opts = {},
+        { timeoutMs = 15000, retries = 1 } = {},
+      ) {
+        let lastErr;
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          const ac = new AbortController();
+          const onExternalAbort = () => ac.abort();
+          if (opts.signal) {
+            if (opts.signal.aborted) ac.abort();
+            else opts.signal.addEventListener("abort", onExternalAbort);
+          }
+          const timer = setTimeout(() => ac.abort(), timeoutMs);
+          try {
+            const res = await fetch(url, { ...opts, signal: ac.signal });
+            clearTimeout(timer);
+            if (opts.signal)
+              opts.signal.removeEventListener("abort", onExternalAbort);
+            if (!res.ok && res.status >= 500 && attempt < retries) {
+              lastErr = new Error(`HTTP ${res.status}`);
+              await sleep(300 * (attempt + 1));
+              continue;
+            }
+            return res;
+          } catch (err) {
+            clearTimeout(timer);
+            if (opts.signal)
+              opts.signal.removeEventListener("abort", onExternalAbort);
+            if (opts.signal && opts.signal.aborted) throw err; // real cancellation, never retry
+            lastErr = err;
+            if (attempt < retries) {
+              await sleep(300 * (attempt + 1));
+              continue;
+            }
+            throw err;
+          }
+        }
+        throw lastErr;
+      }
+
+      /* ============================================================================
+   SECURE-ISH KEY STORAGE  (with .env + old/new key fallback)
+   -----------------------------------------------------------------------
+   Priority order for each provider's key:
+     1. Manual key pasted via the UI  (stored in localStorage)
+     2. New key from .env             (via window.ENV_CONFIG)
+     3. Old key from .env             (automatic fallback if new key fails)
+
+   The user can also toggle between new ↔ old .env keys with a button.
+   If a key from .env is being used, the UI shows it as "(from .env)".
+   ========================================================================= */
+
+      /* Map provider id → ENV_CONFIG field names */
+      const ENV_KEY_MAP = {
+        openrouter:  { newKey: "OPENROUTER_API_KEY",  oldKey: "OPENROUTER_OLD_API_KEY" },
+        elevenlabs:  { newKey: "ELEVENLABS_API_KEY",  oldKey: "ELEVENLABS_OLD_API_KEY" },
+        noiz:        { newKey: "NOIZ_API_KEY",        oldKey: "NOIZ_OLD_API_KEY" },
+        deepgram:    { newKey: "DEEPGRAM_API_KEY",    oldKey: "DEEPGRAM_OLD_API_KEY" },
+      };
+
+      const SecureStorage = {
+        /* localStorage key for manual paste */
+        _k(provider) {
+          return `aicostar.key.${provider}`;
+        },
+
+        /* localStorage key for tracking which .env slot is active ("new" | "old") */
+        _slotK(provider) {
+          return `aicostar.envslot.${provider}`;
+        },
+
+        /* Get the active .env slot for a provider: "new" or "old" */
+        getSlot(provider) {
+          try {
+            return localStorage.getItem(this._slotK(provider)) || "new";
+          } catch (e) {
+            return "new";
+          }
+        },
+
+        /* Set the active .env slot */
+        setSlot(provider, slot) {
+          try {
+            localStorage.setItem(this._slotK(provider), slot);
+          } catch (e) {}
+        },
+
+        /* Toggle between "new" ↔ "old" .env slot and return the new slot name */
+        toggleSlot(provider) {
+          const next = this.getSlot(provider) === "new" ? "old" : "new";
+          this.setSlot(provider, next);
+          return next;
+        },
+
+        /* Read the .env key for a provider + slot */
+        _envKey(provider, slot) {
+          const cfg = window.ENV_CONFIG || {};
+          const map = ENV_KEY_MAP[provider];
+          if (!map) {
+            // Fallback for unmapped providers: try generic API_KEY / OLD_API_KEY
+            return slot === "old" ? (cfg.OLD_API_KEY || "") : (cfg.API_KEY || "");
+          }
+          return slot === "old" ? (cfg[map.oldKey] || "") : (cfg[map.newKey] || "");
+        },
+
+        /* Check whether a given .env slot has a key */
+        hasEnvKey(provider, slot) {
+          return !!this._envKey(provider, slot || this.getSlot(provider));
+        },
+
+        /* Return the source of the active key: "manual", "env-new", "env-old", or "" */
+        source(provider) {
+          try {
+            const manual = localStorage.getItem(this._k(provider));
+            if (manual) return "manual";
+          } catch (e) {}
+          const slot = this.getSlot(provider);
+          if (this._envKey(provider, slot)) return `env-${slot}`;
+          // Try the other slot
+          const other = slot === "new" ? "old" : "new";
+          if (this._envKey(provider, other)) return `env-${other}`;
+          return "";
+        },
+
+        /**
+         * Get the effective API key for a provider.
+         * Priority: manual paste → active .env slot → other .env slot → ""
+         */
+        get(provider) {
+          // 1) Manual key from localStorage
+          try {
+            const manual = localStorage.getItem(this._k(provider));
+            if (manual) return manual;
+          } catch (e) {}
+
+          // 2) Active .env slot
+          const slot = this.getSlot(provider);
+          const envKey = this._envKey(provider, slot);
+          if (envKey) return envKey;
+
+          // 3) Fallback to other .env slot
+          const other = slot === "new" ? "old" : "new";
+          const fallback = this._envKey(provider, other);
+          if (fallback) {
+            this.setSlot(provider, other); // auto-switch to the slot that has a key
+            return fallback;
+          }
+
+          return "";
+        },
+
+        /**
+         * Save a manually pasted key (overrides .env until removed).
+         */
+        set(provider, value) {
+          try {
+            localStorage.setItem(this._k(provider), value || "");
+          } catch (e) {}
+        },
+
+        /**
+         * Remove the manual key. Falls back to .env key if available.
+         */
+        remove(provider) {
+          try {
+            localStorage.removeItem(this._k(provider));
+          } catch (e) {}
+        },
+
+        /**
+         * True if any key is available (manual or .env).
+         */
+        has(provider) {
+          return !!this.get(provider);
+        },
+
+        /**
+         * Called on auth failure (401/403). If using a .env key, switch to old;
+         * if already on old, switch to new. Returns true if a different key is
+         * now active (caller should retry), false if no fallback available.
+         */
+        failover(provider) {
+          const src = this.source(provider);
+          if (src === "manual") return false; // manual key failed — user must fix it
+
+          const currentSlot = this.getSlot(provider);
+          const otherSlot = currentSlot === "new" ? "old" : "new";
+          const otherKey = this._envKey(provider, otherSlot);
+
+          if (otherKey) {
+            this.setSlot(provider, otherSlot);
+            console.warn(
+              `[SecureStorage] ${provider}: ${currentSlot} key failed → switching to ${otherSlot} key`
+            );
+            return true;
+          }
+          return false;
+        },
+      };
+
+      const settings = loadSettings();
+
+      /* ============================================================================
+   DOM refs
+   ========================================================================= */
+      const el = {
+        avatarName: document.getElementById("avatarName"),
+        streamerName: document.getElementById("streamerName"),
+        personaPrompt: document.getElementById("personaPrompt"),
+        micToggle: document.getElementById("micToggle"),
+        textFallbackToggle: document.getElementById("textFallbackToggle"),
+        scaleRange: document.getElementById("scaleRange"),
+        scaleVal: document.getElementById("scaleVal"),
+        xRange: document.getElementById("xRange"),
+        xVal: document.getElementById("xVal"),
+        yRange: document.getElementById("yRange"),
+        yVal: document.getElementById("yVal"),
+        rotRange: document.getElementById("rotRange"),
+        rotVal: document.getElementById("rotVal"),
+        loaderStatus: document.getElementById("loaderStatus"),
+        dropZone: document.getElementById("dropZone"),
+        fileInput: document.getElementById("fileInput"),
+        panel: document.getElementById("panel"),
+        gearBtn: document.getElementById("gearBtn"),
+        dotMic: document.getElementById("dotMic"),
+        dotAI: document.getElementById("dotAI"),
+        dotTalk: document.getElementById("dotTalk"),
+        dotWake: document.getElementById("dotWake"),
+        labelWake: document.getElementById("labelWake"),
+        captions: document.getElementById("captions"),
+        subtitleBar: document.getElementById("subtitleBar"),
+        subtitlePill: document.getElementById("subtitlePill"),
+        subtitleContent: document.getElementById("subtitleContent"),
+        subtitleMicBtn: document.getElementById("subtitleMicBtn"),
+        subtitleBadge: document.getElementById("subtitleBadge"),
+        bubbleYou: document.getElementById("bubbleYou"),
+        bubbleAvatar: document.getElementById("bubbleAvatar"),
+        tagYou: document.getElementById("tagYou"),
+        textYou: document.getElementById("textYou"),
+        tagAvatar: document.getElementById("tagAvatar"),
+        textAvatar: document.getElementById("textAvatar"),
+        textFallbackWrap: document.getElementById("textFallback"),
+        textInput: document.getElementById("textInput"),
+        camToggle: document.getElementById("camToggle"),
+        camMirrorToggle: document.getElementById("camMirrorToggle"),
+        camStatus: document.getElementById("camStatus"),
+        selfCam: document.getElementById("selfCam"),
+        selfCamVideo: document.getElementById("selfCamVideo"),
+        camPrompt: document.getElementById("camPrompt"),
+        camPromptBtn: document.getElementById("camPromptBtn"),
+        camPromptSkip: document.getElementById("camPromptSkip"),
+
+        aiBadge: document.getElementById("aiBadge"),
+        aiBadgeText: document.getElementById("aiBadgeText"),
+        aiProviderSelect: document.getElementById("aiProviderSelect"),
+        aiKeyRow: document.getElementById("aiKeyRow"),
+        aiKeyInput: document.getElementById("aiKeyInput"),
+        aiKeySave: document.getElementById("aiKeySave"),
+        aiKeyRemove: document.getElementById("aiKeyRemove"),
+        aiKeyToggle: document.getElementById("aiKeyToggle"),
+        aiKeySource: document.getElementById("aiKeySource"),
+        aiModelRow: document.getElementById("aiModelRow"),
+        aiModelSelect: document.getElementById("aiModelSelect"),
+        aiModelRefresh: document.getElementById("aiModelRefresh"),
+        aiModelSearchRow: document.getElementById("aiModelSearchRow"),
+        aiModelSearch: document.getElementById("aiModelSearch"),
+        aiModelMeta: document.getElementById("aiModelMeta"),
+        aiTestBtn: document.getElementById("aiTestBtn"),
+        aiErrorBox: document.getElementById("aiErrorBox"),
+
+        ttsBadge: document.getElementById("ttsBadge"),
+        ttsBadgeText: document.getElementById("ttsBadgeText"),
+        ttsProviderSelect: document.getElementById("ttsProviderSelect"),
+        ttsKeyRow: document.getElementById("ttsKeyRow"),
+        ttsKeyInput: document.getElementById("ttsKeyInput"),
+        ttsKeySave: document.getElementById("ttsKeySave"),
+        ttsKeyRemove: document.getElementById("ttsKeyRemove"),
+        ttsKeyToggle: document.getElementById("ttsKeyToggle"),
+        ttsKeySource: document.getElementById("ttsKeySource"),
+        ttsModelRow: document.getElementById("ttsModelRow"),
+        ttsModelSelect: document.getElementById("ttsModelSelect"),
+        ttsModelRefresh: document.getElementById("ttsModelRefresh"),
+        ttsVoiceRow: document.getElementById("ttsVoiceRow"),
+        ttsVoiceSelect: document.getElementById("ttsVoiceSelect"),
+        voiceStability: document.getElementById("voiceStability"),
+        voiceStabilityVal: document.getElementById("voiceStabilityVal"),
+        voiceSimilarity: document.getElementById("voiceSimilarity"),
+        voiceSimilarityVal: document.getElementById("voiceSimilarityVal"),
+        voiceStyle: document.getElementById("voiceStyle"),
+        voiceStyleVal: document.getElementById("voiceStyleVal"),
+        voiceSpeed: document.getElementById("voiceSpeed"),
+        voiceSpeedVal: document.getElementById("voiceSpeedVal"),
+        ttsTestBtn: document.getElementById("ttsTestBtn"),
+        ttsPreviewBtn: document.getElementById("ttsPreviewBtn"),
+        ttsUsageBox: document.getElementById("ttsUsageBox"),
+        ttsErrorBox: document.getElementById("ttsErrorBox"),
+
+        sttBadge: document.getElementById("sttBadge"),
+        sttBadgeText: document.getElementById("sttBadgeText"),
+        sttProviderSelect: document.getElementById("sttProviderSelect"),
+        sttKeyRow: document.getElementById("sttKeyRow"),
+        sttKeyInput: document.getElementById("sttKeyInput"),
+        sttKeySave: document.getElementById("sttKeySave"),
+        sttKeyRemove: document.getElementById("sttKeyRemove"),
+        sttKeySource: document.getElementById("sttKeySource"),
+        wakeWordToggle: document.getElementById("wakeWordToggle"),
+        wakePhraseRow: document.getElementById("wakePhraseRow"),
+        wakePhraseInput: document.getElementById("wakePhraseInput"),
+        subtitlesToggle: document.getElementById("subtitlesToggle"),
+        subtitlesPreviewBtn: document.getElementById("subtitlesPreviewBtn"),
+        sttTestBtn: document.getElementById("sttTestBtn"),
+        sttStatusNote: document.getElementById("sttStatusNote"),
+      };
+
+      let isTalking = false;
+      let listening = false;
+
+      function setMicDot(state) {
+        if (!el.dotMic) return;
+        el.dotMic.className =
+          "dot" +
+          (state === "live" ? " live" : state === "warn" ? " warn" : state === "ready" ? " ready" : "");
+      }
+
+      let modelRoot = null;
+      let modelBounds = {
+        center: new THREE.Vector3(),
+        size: new THREE.Vector3(1, 1.7, 1),
+      };
+
+      let currentFrame = settings.frame || "upper";
+      let currentBg = settings.bg || "transparent";
+
+      el.avatarName.value = settings.avatarName || "";
+      el.streamerName.value = settings.streamerName || "";
+      el.personaPrompt.value = settings.personaPrompt || "";
+      el.micToggle.checked = !!settings.micOn;
+      el.textFallbackToggle.checked = settings.textFallback !== false;
+      el.textFallbackWrap.classList.toggle("show", settings.textFallback !== false);
+      el.scaleRange.value = settings.scale ?? 1;
+      el.scaleVal.textContent = (settings.scale ?? 1).toFixed(2);
+      el.xRange.value = settings.x ?? 0;
+      el.xVal.textContent = (settings.x ?? 0).toFixed(2);
+      el.yRange.value = settings.y ?? 0;
+      el.yVal.textContent = (settings.y ?? 0).toFixed(2);
+      el.rotRange.value = settings.rot ?? 0;
+      el.rotVal.textContent = (settings.rot ?? 0).toFixed(0);
+      el.camMirrorToggle.checked = !!settings.camMirror;
+      el.selfCamVideo.classList.toggle("mirror", !!settings.camMirror);
+      if (el.wakeWordToggle) el.wakeWordToggle.checked = settings.wakeWordMode !== false;
+      if (el.wakePhraseRow) el.wakePhraseRow.style.display = (settings.wakeWordMode !== false) ? "flex" : "none";
+      if (el.wakePhraseInput) el.wakePhraseInput.value = settings.wakePhrase || "OK Pa";
+      if (el.subtitlesToggle) el.subtitlesToggle.checked = settings.subtitlesEnabled !== false;
+
+      /* generic slider <-> label wiring, shared by framing + voice-setting sliders */
+      function wireSlider(range, out, digits, onChange) {
+        const update = () => {
+          out.textContent = parseFloat(range.value).toFixed(digits);
+          if (onChange) onChange(parseFloat(range.value));
+        };
+        range.addEventListener("input", update);
+        update();
+      }
+      wireSlider(el.scaleRange, el.scaleVal, 2, () => {
+        applyTransformFromSliders();
+        saveSettings();
+      });
+      wireSlider(el.xRange, el.xVal, 2, () => {
+        applyTransformFromSliders();
+        saveSettings();
+      });
+      wireSlider(el.yRange, el.yVal, 2, () => {
+        applyTransformFromSliders();
+        saveSettings();
+      });
+      wireSlider(el.rotRange, el.rotVal, 0, () => {
+        applyTransformFromSliders();
+        saveSettings();
+      });
+
+      document.querySelectorAll("[data-frame]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.frame === currentFrame);
+        btn.addEventListener("click", () => {
+          currentFrame = btn.dataset.frame;
+          document
+            .querySelectorAll("[data-frame]")
+            .forEach((b) => b.classList.toggle("active", b === btn));
+          applyFraming(currentFrame);
+          saveSettings();
+        });
+      });
+      document.querySelectorAll("[data-bg]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.bg === currentBg);
+        btn.addEventListener("click", () => {
+          currentBg = btn.dataset.bg;
+          document
+            .querySelectorAll("[data-bg]")
+            .forEach((b) => b.classList.toggle("active", b === btn));
+          document.body.classList.toggle("bg-chroma", currentBg === "chroma");
+          saveSettings();
+        });
+      });
+      document.body.classList.toggle("bg-chroma", currentBg === "chroma");
+
+      document.getElementById("resetFraming").addEventListener("click", () => {
+        el.scaleRange.value = 1;
+        el.scaleVal.textContent = "1.00";
+        el.xRange.value = 0;
+        el.xVal.textContent = "0.00";
+        el.yRange.value = 0;
+        el.yVal.textContent = "0.00";
+        el.rotRange.value = -12;
+        el.rotVal.textContent = "-12";
+        applyTransformFromSliders();
+        saveSettings();
+      });
+
+      el.gearBtn.addEventListener("click", () =>
+        el.panel.classList.toggle("open"),
+      );
+      window.addEventListener("keydown", (e) => {
+        if (
+          e.key.toLowerCase() === "h" &&
+          !["INPUT", "TEXTAREA", "SELECT"].includes(
+            document.activeElement.tagName,
+          )
+        ) {
+          document.body.classList.toggle("chrome-hidden");
+        }
+      });
+
+      [el.avatarName, el.streamerName, el.personaPrompt].forEach((input) =>
+        input.addEventListener("change", saveSettings),
+      );
+
+      /* ============================================================================
+   THREE.js viewport (unchanged from the original overlay)
+   ========================================================================= */
+      const viewport = document.getElementById("viewport");
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      viewport.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        32,
+        window.innerWidth / window.innerHeight,
+        0.05,
+        100,
+      );
+
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x30323a, 1.1));
+      const key = new THREE.DirectionalLight(0xffffff, 1.4);
+      key.position.set(1.4, 2.2, 2.0);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0xbcd4ff, 0.5);
+      fill.position.set(-1.6, 1.0, -1.2);
+      scene.add(fill);
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      let mixer = null,
+        actions = {},
+        currentAction = null;
+
+      function playAction(name, { fade = 0.4, once = false } = {}) {
+        const next = actions[name];
+        if (!next) return;
+        if (next === currentAction && !once) return;
+        next.reset();
+        next.setLoop(
+          once ? THREE.LoopOnce : THREE.LoopRepeat,
+          once ? 1 : Infinity,
+        );
+        next.clampWhenFinished = once;
+        next.fadeIn(fade).play();
+        if (currentAction && currentAction !== next)
+          currentAction.fadeOut(fade);
+        currentAction = next;
+      }
+
+      function loadModelFromArrayBuffer(buf, label) {
+        const loader = new GLTFLoader();
+        loader.parse(
+          buf,
+          "",
+          (gltf) => {
+            if (modelRoot) scene.remove(modelRoot);
+            modelRoot = gltf.scene;
+            scene.add(modelRoot);
+
+            mixer = new THREE.AnimationMixer(modelRoot);
+            actions = {};
+            gltf.animations.forEach((clip) => {
+              actions[clip.name] = mixer.clipAction(clip);
+            });
+
+            const box = new THREE.Box3().setFromObject(modelRoot);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            modelRoot.position.x -= center.x;
+            modelRoot.position.z -= center.z;
+            modelRoot.position.y -= box.min.y;
+            modelBounds = { center: new THREE.Vector3(0, size.y / 2, 0), size };
+
+            applyFraming(currentFrame);
+            applyTransformFromSliders();
+
+            if (actions["Idle"]) playAction("Idle", { fade: 0 });
+            else if (gltf.animations[0])
+              playAction(gltf.animations[0].name, { fade: 0 });
+
+            scheduleIdleVariation();
+            el.loaderStatus.textContent = `Loaded: ${label}\nClips: ${gltf.animations.map((a) => a.name).join(", ") || "none"}`;
+          },
+          (err) => {
+            console.error(err);
+            el.loaderStatus.textContent = `Failed to parse ${label} — is it a valid rigged .glb?`;
+          },
+        );
+      }
+
+      function applyFraming(frame) {
+        const { size } = modelBounds;
+        const height = size.y || 1.7;
+        let targetY, dist;
+        if (frame === "full") {
+          targetY = height * 0.5;
+          dist = height * 1.55;
+        } else if (frame === "bust") {
+          targetY = height * 0.9;
+          dist = height * 0.62;
+        } else {
+          targetY = height * 0.72;
+          dist = height * 0.95;
+        } // upper
+        camera.position.set(0, targetY, dist);
+        camera.lookAt(0, targetY, 0);
+      }
+
+      function applyTransformFromSliders() {
+        if (!modelRoot) return;
+        const s = parseFloat(el.scaleRange.value);
+        modelRoot.scale.setScalar(s);
+        modelRoot.position.x =
+          parseFloat(el.xRange.value) * (modelBounds.size.x || 0.6);
+        modelRoot.position.y =
+          parseFloat(el.yRange.value) * (modelBounds.size.y || 1.7) * 0.5;
+        modelRoot.rotation.y = THREE.MathUtils.degToRad(
+          parseFloat(el.rotRange.value),
+        );
+      }
+
+      let idleTimer = null;
+      function scheduleIdleVariation() {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(
+          () => {
+            if (!isTalking && actions["Idle Look Around"]) {
+              playAction("Idle Look Around", { once: true });
+              mixer.addEventListener("finished", function onDone() {
+                mixer.removeEventListener("finished", onDone);
+                if (!isTalking) playAction("Idle");
+                scheduleIdleVariation();
+              });
+            } else {
+              scheduleIdleVariation();
+            }
+          },
+          6000 + Math.random() * 7000,
+        );
+      }
+
+      el.dropZone.addEventListener("click", () => el.fileInput.click());
+      el.dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        el.dropZone.classList.add("drag");
+      });
+      el.dropZone.addEventListener("dragleave", () =>
+        el.dropZone.classList.remove("drag"),
+      );
+      el.dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        el.dropZone.classList.remove("drag");
+        const file = e.dataTransfer.files[0];
+        if (file) readFile(file);
+      });
+      el.fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) readFile(file);
+      });
+      function readFile(file) {
+        const reader = new FileReader();
+        reader.onload = () =>
+          loadModelFromArrayBuffer(reader.result, file.name);
+        reader.readAsArrayBuffer(file);
+      }
+      (async function autoLoad() {
+        try {
+          const res = await fetch("./rigged-model.glb");
+          if (!res.ok) throw new Error("not found");
+          const buf = await res.arrayBuffer();
+          loadModelFromArrayBuffer(buf, "rigged-model.glb (auto)");
+        } catch (err) {
+          el.loaderStatus.textContent =
+            "Couldn't auto-load rigged-model.glb (normal if you opened this file directly). Drop your .glb above.";
+          el.panel.classList.add("open");
+        }
+      })();
+
+      const clock = new THREE.Clock();
+      renderer.setAnimationLoop(() => {
+        const dt = clock.getDelta();
+        if (mixer) mixer.update(dt);
+        renderer.render(scene, camera);
+      });
+
+      /* ============================================================================
+   Self-cam (webcam as live background) — unchanged
+   ========================================================================= */
+      let camStream = null;
+      async function startCamera() {
+        if (!window.isSecureContext) {
+          el.camToggle.checked = false;
+          const msg = `Camera needs a secure context — opening the file directly (file://) or plain http:// on anything other than localhost won't work. Serve it via http://localhost:8000 or https.`;
+          el.camStatus.innerHTML = `<span style="color:var(--err)">${msg}</span>`;
+          el.camPrompt.querySelector("p").textContent = msg;
+          return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          el.camToggle.checked = false;
+          el.camStatus.innerHTML = `<span style="color:var(--err)">getUserMedia isn't available in this browser context.</span>`;
+          return;
+        }
+        el.camStatus.innerHTML = `<span style="color:var(--warn)">Requesting camera…</span> (look for a permission prompt near the address bar)`;
+        el.camPromptBtn.textContent = "Requesting…";
+        try {
+          camStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false,
+          });
+          el.selfCamVideo.srcObject = camStream;
+          await el.selfCamVideo.play().catch(() => {});
+          el.selfCam.classList.add("active");
+          el.camPrompt.classList.add("hidden");
+          el.camStatus.innerHTML = `<span style="color:var(--ok)">Camera on.</span>`;
+        } catch (err) {
+          console.error(err);
+          el.camToggle.checked = false;
+          el.selfCam.classList.remove("active");
+          el.camPromptBtn.textContent = "🎥 Enable Camera";
+          let hint = err.message || "";
+          if (err.name === "NotAllowedError")
+            hint =
+              "Permission denied — click the camera icon in Chrome's address bar and allow it, then click the button again.";
+          else if (err.name === "NotFoundError")
+            hint = "No camera device was found.";
+          else if (err.name === "NotReadableError")
+            hint =
+              "Another app (or browser tab) already has the camera open — close it and try again.";
+          el.camStatus.innerHTML = `<span style="color:var(--err)">Couldn't start camera (${err.name || "error"}).</span> ${hint}`;
+          el.camPrompt.querySelector("p").textContent = hint;
+        }
+      }
+      function stopCamera() {
+        if (camStream) {
+          camStream.getTracks().forEach((t) => t.stop());
+          camStream = null;
+        }
+        el.selfCamVideo.srcObject = null;
+        el.selfCam.classList.remove("active");
+        el.camPrompt.classList.remove("hidden");
+        el.camPromptBtn.textContent = "🎥 Enable Camera";
+        el.camStatus.textContent = "Camera is off.";
+      }
+      el.camToggle.addEventListener("change", () => {
+        if (el.camToggle.checked) startCamera();
+        else stopCamera();
+        saveSettings();
+      });
+      el.camMirrorToggle.addEventListener("change", () => {
+        el.selfCamVideo.classList.toggle("mirror", el.camMirrorToggle.checked);
+        saveSettings();
+      });
+      el.camPromptBtn.addEventListener("click", () => {
+        el.camToggle.checked = true;
+        startCamera();
+        saveSettings();
+      });
+      if (el.camPromptSkip) {
+        el.camPromptSkip.addEventListener("click", () => {
+          if (el.camPrompt) el.camPrompt.classList.add("hidden");
+        });
+      }
+      if (settings.camOn) {
+        el.camToggle.checked = true;
+        startCamera();
+      }
+
+      /* ============================================================================
+   Direct mouse/touch control of the avatar — unchanged
+   ========================================================================= */
+      (function enableAvatarPointerControl() {
+        let mode = null;
+        let activePointerId = null;
+        let startX = 0,
+          startY = 0;
+        let startVals = { x: 0, y: 0, rot: 0, scale: 1 };
+
+        function isUIElement(t) {
+          return !!(
+            t &&
+            t.closest &&
+            t.closest("#panel, #gearBtn, #hud, #textFallback, #camPrompt")
+          );
+        }
+        function readVals() {
+          return {
+            x: parseFloat(el.xRange.value),
+            y: parseFloat(el.yRange.value),
+            rot: parseFloat(el.rotRange.value),
+            scale: parseFloat(el.scaleRange.value),
+          };
+        }
+        function writeVals(v) {
+          el.xRange.value = v.x;
+          el.xVal.textContent = v.x.toFixed(2);
+          el.yRange.value = v.y;
+          el.yVal.textContent = v.y.toFixed(2);
+          el.rotRange.value = v.rot;
+          el.rotVal.textContent = v.rot.toFixed(0);
+          el.scaleRange.value = v.scale;
+          el.scaleVal.textContent = v.scale.toFixed(2);
+          applyTransformFromSliders();
+        }
+        function clamp(v, lo, hi) {
+          return Math.min(hi, Math.max(lo, v));
+        }
+
+        document.addEventListener(
+          "pointerdown",
+          (e) => {
+            if (isUIElement(e.target)) return;
+            mode = e.button === 2 || e.shiftKey ? "rotate" : "move";
+            activePointerId = e.pointerId;
+            startX = e.clientX;
+            startY = e.clientY;
+            startVals = readVals();
+            document.body.classList.add(
+              mode === "rotate" ? "rotating-avatar" : "dragging-avatar",
+            );
+            e.preventDefault();
+          },
+          { capture: true },
+        );
+
+        document.addEventListener("pointermove", (e) => {
+          if (!mode || e.pointerId !== activePointerId) return;
+          const dx = e.clientX - startX,
+            dy = e.clientY - startY;
+          const v = readVals();
+          if (mode === "move") {
+            v.x = clamp(startVals.x + dx / (window.innerWidth * 0.5), -1, 1);
+            v.y = clamp(startVals.y - dy / (window.innerHeight * 0.5), -1, 1);
+          } else {
+            v.rot = clamp(startVals.rot + dx * 0.25, -45, 45);
+          }
+          writeVals(v);
+        });
+
+        function endDrag() {
+          if (mode) saveSettings();
+          mode = null;
+          activePointerId = null;
+          document.body.classList.remove("dragging-avatar", "rotating-avatar");
+        }
+        document.addEventListener("pointerup", endDrag);
+        document.addEventListener("pointercancel", endDrag);
+        document.addEventListener("contextmenu", (e) => {
+          if (!isUIElement(e.target)) e.preventDefault();
+        });
+        document.addEventListener(
+          "wheel",
+          (e) => {
+            if (isUIElement(e.target)) return;
+            e.preventDefault();
+            const v = readVals();
+            v.scale = clamp(v.scale - e.deltaY * 0.0015, 0.05, 3);
+            writeVals(v);
+            saveSettings();
+          },
+          { passive: false },
+        );
+        document.addEventListener("dblclick", (e) => {
+          if (isUIElement(e.target)) return;
+          document.getElementById("resetFraming").click();
+        });
+      })();
+
+      /* ============================================================================
+   LIVE BROADCAST SUBTITLES & CAPTIONS SYSTEM
+   ========================================================================= */
+      function escapeHtml(str) {
+        return String(str || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      const SubtitleManager = (() => {
+        let resetTimer = null;
+        let previewTimer = null;
+        let isPreviewing = false;
+
+        function updateStandby() {
+          if (isPreviewing) return;
+          clearTimeout(resetTimer);
+
+          if (settings.subtitlesEnabled === false) {
+            if (el.captions) el.captions.classList.add("hidden");
+            return;
+          }
+          if (el.captions) el.captions.classList.remove("hidden");
+
+          const micActive = !!(el.micToggle && el.micToggle.checked);
+          if (!micActive) {
+            render({
+              pillClass: "pill-off",
+              pillText: "🎙️ Mic Off",
+              textHtml: `<span style="color:#ff9e9e; font-weight:600;">Microphone is OFF.</span> Turn on the mic so Panda can hear you.`,
+              isStandby: false,
+              barClass: "mode-mic-off",
+              showMicBtn: true,
+              badgeText: "STT PAUSED"
+            });
+            return;
+          }
+
+          const wakePhrase = settings.wakePhrase || "OK Pa";
+          const isDeepgram = (settings.sttProvider || "deepgram") === "deepgram";
+          const isDgLive = isDeepgram && typeof DeepgramSTTService !== "undefined" && DeepgramSTTService.isConnected();
+          const providerLabel = isDgLive ? "DEEPGRAM LIVE 🟢" : (isDeepgram ? "DEEPGRAM 🟡" : "WEBSPEECH 🟢");
+
+          render({
+            pillClass: "pill-standby",
+            pillText: "🎙️ Live STT",
+            textHtml: settings.wakeWordMode 
+              ? `Waiting for wake phrase. Say <strong class="wake-highlight">"${escapeHtml(wakePhrase)}"</strong> to talk to Panda!`
+              : `Listening continuously. Speak anytime!`,
+            isStandby: true,
+            barClass: "",
+            showMicBtn: false,
+            badgeText: providerLabel
+          });
+        }
+
+        function showUserSpeech(text, mode = "normal") {
+          if (settings.subtitlesEnabled === false) return;
+          if (el.captions) el.captions.classList.remove("hidden");
+          clearTimeout(resetTimer);
+
+          const isWake = mode === "wake-recording";
+          const isInterim = mode === "interim";
+
+          const pillClass = isWake ? "pill-wake" : "pill-you";
+          const pillText = isWake ? "🐼 Hearing Prompt" : (isInterim ? "🎙️ Live Hearing" : "🎙️ You");
+          const barClass = isWake ? "mode-wake-recording" : (isInterim ? "mode-interim" : "");
+
+          render({
+            pillClass,
+            pillText,
+            textHtml: `<span class="${isWake ? 'wake-highlight' : ''}">${escapeHtml(text)}</span>`,
+            isStandby: false,
+            barClass,
+            showMicBtn: false,
+            badgeText: "DEEPGRAM LIVE 🟢"
+          });
+
+          // If speech is finalized, smoothly return to standby after 6s of silence
+          if (!isInterim && !isWake) {
+            resetTimer = setTimeout(updateStandby, 6000);
+          }
+        }
+
+        function showAvatarSpeech(text, isThinking = false) {
+          if (settings.subtitlesEnabled === false) return;
+          if (el.captions) el.captions.classList.remove("hidden");
+          clearTimeout(resetTimer);
+
+          const avatarName = (el.avatarName && el.avatarName.value) || "Panda";
+
+          render({
+            pillClass: "pill-avatar",
+            pillText: isThinking ? "⚡ Thinking" : `🐼 ${escapeHtml(avatarName)}`,
+            textHtml: isThinking
+              ? `<span style="color:var(--text-dim); font-style:italic;">${escapeHtml(text)}</span>`
+              : `<span class="avatar-highlight">${escapeHtml(text)}</span>`,
+            isStandby: false,
+            barClass: "mode-avatar",
+            showMicBtn: false,
+          });
+
+          if (!isThinking) {
+            resetTimer = setTimeout(updateStandby, 8000);
+          }
+        }
+
+        function runPreview() {
+          isPreviewing = true;
+          clearTimeout(previewTimer);
+          clearTimeout(resetTimer);
+          if (el.captions) el.captions.classList.remove("hidden");
+
+          // Step 1: User speaking
+          showUserSpeech('OK Pa, can you hear me live?', 'wake-recording');
+
+          previewTimer = setTimeout(() => {
+            // Step 2: Thinking
+            showAvatarSpeech('Panda is thinking…', true);
+
+            previewTimer = setTimeout(() => {
+              // Step 3: Panda answering
+              showAvatarSpeech('Loud and clear! Deepgram live subtitles are working in real-time! 🚀');
+
+              previewTimer = setTimeout(() => {
+                isPreviewing = false;
+                updateStandby();
+              }, 4500);
+            }, 1200);
+          }, 2000);
+        }
+
+        function render({ pillClass, pillText, textHtml, isStandby, barClass, showMicBtn, badgeText }) {
+          if (el.subtitleBar) {
+            el.subtitleBar.className = `subtitle-bar ${barClass || ''}`;
+          }
+          if (el.subtitlePill) {
+            el.subtitlePill.className = `subtitle-pill ${pillClass || ''}`;
+            el.subtitlePill.textContent = pillText || '';
+          }
+          if (el.subtitleContent) {
+            el.subtitleContent.className = `subtitle-content ${isStandby ? 'standby-hint' : ''}`;
+            el.subtitleContent.innerHTML = textHtml || '';
+          }
+          if (el.subtitleMicBtn) {
+            el.subtitleMicBtn.style.display = showMicBtn ? "inline-block" : "none";
+          }
+          if (el.subtitleBadge && badgeText) {
+            el.subtitleBadge.textContent = badgeText;
+          }
+        }
+
+        return {
+          updateStandby,
+          showUserSpeech,
+          showAvatarSpeech,
+          runPreview,
+        };
+      })();
+
+      function showYou(text, mode = "normal") {
+        if (settings.subtitlesEnabled === false) return;
+        const textClean = (text || "").trim();
+        if (!textClean) return;
+
+        SubtitleManager.showUserSpeech(textClean, mode);
+
+        // Fallback for legacy elements
+        if (el.textYou) el.textYou.textContent = textClean;
+        if (el.tagYou) el.tagYou.textContent = mode === "wake-recording" ? "🐼 Hearing Prompt" : "🎙️ You";
+      }
+
+      function showAvatar(text, isThinking = false) {
+        if (settings.subtitlesEnabled === false) return;
+        const textClean = (text || "").trim();
+        if (!textClean) return;
+
+        SubtitleManager.showAvatarSpeech(textClean, isThinking);
+
+        // Fallback for legacy elements
+        if (el.textAvatar) el.textAvatar.textContent = textClean;
+        if (el.tagAvatar) el.tagAvatar.textContent = `🐼 ${el.avatarName ? el.avatarName.value : "Panda"}`;
+      }
+
+      /* ============================================================================
+   Mood-driven animation — unchanged
+   ========================================================================= */
+      const MOOD_TAG_RE = /^\[(normal|excited|energetic|thinking|refuse)\]\s*/i;
+      const MOOD_INSTRUCTION =
+        "\n\nBefore every reply, output exactly one lowercase mood tag in square " +
+        "brackets — one of: [normal] [excited] [energetic] [thinking] [refuse] — " +
+        "picking whichever best matches the tone of the reply, immediately " +
+        "followed by a space and then the reply itself. Always include exactly " +
+        "one tag, at the very start, with nothing before it. Never explain the " +
+        "tag or mention it.";
+      const MOOD_ACTION_MAP = {
+        refuse: "Idle No",
+        excited: "Walk",
+        energetic: "Sprint",
+        thinking: "Idle Look Around",
+        normal: "Idle Talking",
+      };
+      const MOOD_ONE_SHOT = new Set(["Idle No", "Idle Look Around"]);
+      let pendingMoodAction = "Idle Talking";
+
+      function classifyMood(text) {
+        const t = (text || "").toLowerCase();
+        if (/\b(sorry|can't|cannot|won't|refuse|not able)\b/.test(t))
+          return "refuse";
+        if (
+          /[!]{1,}/.test(t) &&
+          /\b(yes|amazing|awesome|love|great|wow)\b/.test(t)
+        )
+          return "energetic";
+        if (t.includes("!")) return "excited";
+        if (/\b(hmm|let me think|not sure|maybe)\b/.test(t)) return "thinking";
+        return "normal";
+      }
+
+      function playMoodAction(name) {
+        if (!actions[name]) {
+          if (actions["Idle Talking"]) playAction("Idle Talking");
+          return;
+        }
+        if (MOOD_ONE_SHOT.has(name)) {
+          playAction(name, { once: true });
+          const onDone = () => {
+            mixer.removeEventListener("finished", onDone);
+            if (isTalking) playAction("Idle Talking");
+          };
+          mixer.addEventListener("finished", onDone);
+        } else {
+          playAction(name);
+        }
+      }
+      function applyMoodAnimation(mood) {
+        pendingMoodAction = MOOD_ACTION_MAP[mood] || "Idle Talking";
+        if (isTalking) playMoodAction(pendingMoodAction);
+      }
+
+      function playAttentiveGesture() {
+        if (!actions) return;
+        if (actions["Idle Look Around"]) {
+          playAction("Idle Look Around", { once: true });
+          const onDone = () => {
+            if (mixer) mixer.removeEventListener("finished", onDone);
+            if (!isTalking && actions["Idle"]) playAction("Idle");
+          };
+          if (mixer) mixer.addEventListener("finished", onDone);
+        }
+      }
+
+      function personaText() {
+        return el.personaPrompt.value
+          .replaceAll("{avatar}", el.avatarName.value || "the co-host")
+          .replaceAll("{streamer}", el.streamerName.value || "the streamer");
+      }
+
+      /* ============================================================================
+   ============================  AI PROVIDER SYSTEM  ========================
+   ============================================================================
+   Every adapter implements the same shape:
+     id, name, needsKey
+     async listModels({ force }) -> [{ id, name, provider, context, priceIn, priceOut, capabilities }]
+     async testConnection() -> { ok, message }
+     async getUsage() -> { remaining, limit, used, unit, label } | null
+     generate({ messages, model, signal }) -> async generator yielding text deltas
+   The rest of the app only ever talks to AIService, never to an adapter or a
+   provider's HTTP API directly — that's what keeps it provider-agnostic.
+   ========================================================================= */
+
+      class ProviderError extends Error {
+        constructor(
+          message,
+          { provider, retriable = false, action = null } = {},
+        ) {
+          super(message);
+          this.provider = provider;
+          this.retriable = retriable;
+          this.action = action; // e.g. "replace-key"
+        }
+      }
+
+      function friendlyHTTPError(provider, status, bodyText) {
+        const low = (bodyText || "").toLowerCase();
+        if (status === 401 || status === 403)
+          return new ProviderError(
+            `${provider} rejected the API key. It may be invalid, revoked, or missing required permissions.`,
+            { provider, action: "replace-key" },
+          );
+        if (status === 429)
+          return new ProviderError(
+            `${provider} is rate-limiting this key right now. Wait a moment and try again.`,
+            { provider, retriable: true },
+          );
+        if (
+          status === 402 ||
+          low.includes("insufficient") ||
+          low.includes("credit")
+        )
+          return new ProviderError(
+            `${provider} reports insufficient credits/quota on this key.`,
+            { provider, action: "replace-key" },
+          );
+        if (status === 404)
+          return new ProviderError(
+            `${provider} couldn't find the requested model or voice. It may have been renamed or retired — try refreshing the list.`,
+            { provider },
+          );
+        if (status >= 500)
+          return new ProviderError(
+            `${provider} is having server-side issues right now.`,
+            { provider, retriable: true },
+          );
+        if (status === 400)
+          return new ProviderError(
+            `${provider} rejected the request (bad parameters). Check the selected model/voice and settings.`,
+            { provider },
+          );
+        return new ProviderError(
+          `${provider} returned an unexpected error (HTTP ${status}).`,
+          { provider },
+        );
+      }
+      function friendlyNetworkError(provider, err) {
+        if (err && err.name === "AbortError") return err; // cancellation / timeout — handled by caller
+        return new ProviderError(
+          `Couldn't reach ${provider} — check your network connection.`,
+          { provider, retriable: true },
+        );
+      }
+
+      /* ---------------------------------------------------------------------------
+   Gemini (Local) — Chrome's on-device Prompt API. This is the "local Gemini
+   option": no network call, no API key, runs entirely on-device.
+   ------------------------------------------------------------------------- */
+      class GeminiLocalAdapter {
+        id = "gemini-local";
+        name = "Gemini (Local)";
+        needsKey = false;
+        _session = null;
+        _sessionPrompt = null;
+        SUPPORTED_LANGS = ["de", "en", "es", "fr", "ja"];
+
+        _langOptions() {
+          const navLang = (navigator.language || "en")
+            .slice(0, 2)
+            .toLowerCase();
+          const lang = this.SUPPORTED_LANGS.includes(navLang) ? navLang : "en";
+          return {
+            expectedInputs: [{ type: "text", languages: [lang] }],
+            expectedOutputs: [{ type: "text", languages: [lang] }],
+          };
+        }
+        async listModels() {
+          return [
+            {
+              id: "gemini-nano",
+              name: "Gemini Nano (on-device)",
+              provider: "Google (local)",
+              context: null,
+              priceIn: 0,
+              priceOut: 0,
+              capabilities: ["text"],
+            },
+          ];
+        }
+        async testConnection() {
+          if (!("LanguageModel" in self))
+            return {
+              ok: false,
+              message:
+                "LanguageModel API not found — needs a recent Chrome with the on-device model flags enabled.",
+            };
+          try {
+            const avail = await LanguageModel.availability(this._langOptions());
+            if (avail === "available")
+              return { ok: true, message: "Gemini Nano ready." };
+            if (avail === "unavailable")
+              return {
+                ok: false,
+                message: "Unavailable on this device/browser.",
+              };
+            return {
+              ok: true,
+              message: `${avail} — first prompt will trigger the on-device model download.`,
+            };
+          } catch (err) {
+            return {
+              ok: false,
+              message: "Couldn't check availability: " + err.message,
+            };
+          }
+        }
+        async getUsage() {
+          return null;
+        } // not exposed by this API
+        async _ensureSession(systemPrompt) {
+          if (this._session && this._sessionPrompt === systemPrompt)
+            return this._session;
+          try {
+            this._session?.destroy?.();
+          } catch (e) {}
+          try {
+            this._session = await LanguageModel.create({
+              initialPrompts: [{ role: "system", content: systemPrompt }],
+              ...this._langOptions(),
+            });
+          } catch (e1) {
+            this._session = await LanguageModel.create({
+              initialPrompts: [{ role: "system", content: systemPrompt }],
+              expectedInputs: [{ type: "text", languages: ["en"] }],
+              expectedOutputs: [{ type: "text", languages: ["en"] }],
+            });
+          }
+          this._sessionPrompt = systemPrompt;
+          return this._session;
+        }
+        async *generate({ messages, signal }) {
+          if (!("LanguageModel" in self))
+            throw new ProviderError(
+              "Gemini Nano isn't available in this browser.",
+              { provider: this.name },
+            );
+          const system =
+            messages.find((m) => m.role === "system")?.content || "";
+          const question =
+            messages.filter((m) => m.role === "user").slice(-1)[0]?.content ||
+            "";
+          let avail;
+          try {
+            avail = await LanguageModel.availability(this._langOptions());
+          } catch (e) {
+            avail = "available";
+          }
+          if (avail === "unavailable")
+            throw new ProviderError(
+              "Gemini Nano isn't available on this device.",
+              { provider: this.name },
+            );
+          if (avail === "downloadable" || avail === "downloading")
+            throw new ProviderError(
+              `${avail} — the on-device model is still downloading.`,
+              { provider: this.name, retriable: true },
+            );
+          const session = await this._ensureSession(system);
+          const stream = session.promptStreaming(question, { signal });
+          let rawFull = "";
+          if (typeof stream[Symbol.asyncIterator] === "function") {
+            for await (const chunk of stream) {
+              let delta;
+              if (typeof chunk === "string" && chunk.startsWith(rawFull)) {
+                delta = chunk.slice(rawFull.length);
+                rawFull = chunk;
+              } else {
+                delta = chunk;
+                rawFull += chunk;
+              }
+              yield delta;
+            }
+          } else {
+            const reader = stream.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              let delta;
+              if (typeof value === "string" && value.startsWith(rawFull)) {
+                delta = value.slice(rawFull.length);
+                rawFull = value;
+              } else {
+                delta = value;
+                rawFull += value;
+              }
+              yield delta;
+            }
+          }
+        }
+      }
+
+      /* ---------------------------------------------------------------------------
+   OpenRouter — dynamic model discovery + OpenAI-compatible streaming chat.
+   ------------------------------------------------------------------------- */
+      class OpenRouterAdapter {
+        id = "openrouter";
+        name = "OpenRouter";
+        needsKey = true;
+        BASE = "https://openrouter.ai/api/v1";
+        _modelsCache = null;
+        _modelsCacheAt = 0;
+        CACHE_TTL = 60 * 60 * 1000;
+
+        _headers() {
+          const key = SecureStorage.get(this.id);
+          return {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+            "X-Title": "AI Co-Star Overlay",
+          };
+        }
+        async listModels({ force = false } = {}) {
+          const now = Date.now();
+          if (
+            !force &&
+            this._modelsCache &&
+            now - this._modelsCacheAt < this.CACHE_TTL
+          )
+            return this._modelsCache;
+          let res;
+          try {
+            res = await fetchTimeout(
+              `${this.BASE}/models`,
+              { headers: this._headers() },
+              { timeoutMs: 12000, retries: 1 },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const json = await res.json();
+          const list = (json.data || [])
+            .filter((m) => {
+              // Only keep free models
+              const isFree =
+                m.id.endsWith(":free") ||
+                (m.pricing &&
+                  Number(m.pricing.prompt) === 0 &&
+                  Number(m.pricing.completion) === 0);
+              if (!isFree) return false;
+
+              // Only text models
+              const mods = m.architecture || {};
+              const inputs =
+                mods.input_modalities ||
+                [mods.modality?.split("->")[0]].filter(Boolean);
+              const outputs =
+                mods.output_modalities ||
+                [mods.modality?.split("->")[1]].filter(Boolean);
+              return (
+                (!inputs.length || inputs.includes("text")) &&
+                (!outputs.length || outputs.includes("text"))
+              );
+            })
+            .map((m) => ({
+              id: m.id,
+              name: (m.name || m.id).replace(/\s*\(free\)$/i, "") + " (Free)",
+              provider: (m.id || "").split("/")[0] || "unknown",
+              context:
+                m.context_length ?? m.top_provider?.context_length ?? null,
+              priceIn: 0,
+              priceOut: 0,
+              capabilities: (m.architecture?.input_modalities || [])
+                .concat(m.architecture?.output_modalities || [])
+                .filter((v, i, a) => a.indexOf(v) === i),
+              description: m.description || "",
+            }))
+            .sort((a, b) => {
+              if (a.id === "openrouter/free") return -1;
+              if (b.id === "openrouter/free") return 1;
+              return a.name.localeCompare(b.name);
+            });
+          this._modelsCache = list;
+          this._modelsCacheAt = now;
+          return list;
+        }
+        async testConnection() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return { ok: false, message: "No API key configured." };
+          try {
+            const res = await fetchTimeout(
+              `${this.BASE}/auth/key`,
+              { headers: this._headers() },
+              { timeoutMs: 10000, retries: 0 },
+            );
+            if (!res.ok)
+              throw friendlyHTTPError(
+                this.name,
+                res.status,
+                await res.text().catch(() => ""),
+              );
+            const json = await res.json();
+            return { ok: true, message: "Connected.", data: json.data };
+          } catch (err) {
+            if (err instanceof ProviderError)
+              return { ok: false, message: err.message };
+            return {
+              ok: false,
+              message: friendlyNetworkError(this.name, err).message,
+            };
+          }
+        }
+        async getUsage() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return null;
+          try {
+            const res = await fetchTimeout(
+              `${this.BASE}/auth/key`,
+              { headers: this._headers() },
+              { timeoutMs: 10000, retries: 0 },
+            );
+            if (!res.ok) return null;
+            const json = await res.json();
+            const d = json.data || {};
+            if (d.limit == null && d.limit_remaining == null) return null; // unlimited/unspecified — nothing meaningful to show
+            return {
+              remaining: d.limit_remaining,
+              limit: d.limit,
+              used: d.usage,
+              unit: "credits",
+              label: "OpenRouter",
+            };
+          } catch (e) {
+            return null;
+          }
+        }
+        async *generate({ messages, model, signal }) {
+          const key = SecureStorage.get(this.id);
+          if (!key)
+            throw new ProviderError("No OpenRouter API key configured.", {
+              provider: this.name,
+              action: "replace-key",
+            });
+          if (!model || (!model.endsWith(':free') && !this._modelsCache?.some(m => m.id === model))) {
+            const fallback = this._modelsCache?.[0]?.id || "inclusionai/ling-3.0-flash-vl:free";
+            console.warn(`[OpenRouter] Switching from non-free model '${model}' to free model '${fallback}'`);
+            model = fallback;
+            settings.aiModel = fallback;
+            saveSettings();
+            if (el.aiModelSelect) el.aiModelSelect.value = fallback;
+          }
+          let res;
+          try {
+            res = await fetch(`${this.BASE}/chat/completions`, {
+              method: "POST",
+              headers: this._headers(),
+              signal,
+              body: JSON.stringify({ model, messages, stream: true }),
+            });
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok) {
+            if (res.status === 402) {
+              console.warn(`[OpenRouter] Insufficient credits for '${model}'. Switching to free model...`);
+              const freeModel = this._modelsCache?.find(m => m.id.endsWith(':free'))?.id || "inclusionai/ling-3.0-flash-vl:free";
+              model = freeModel;
+              settings.aiModel = freeModel;
+              saveSettings();
+              if (el.aiModelSelect) el.aiModelSelect.value = freeModel;
+              try {
+                res = await fetch(`${this.BASE}/chat/completions`, {
+                  method: "POST",
+                  headers: this._headers(),
+                  signal,
+                  body: JSON.stringify({ model, messages, stream: true }),
+                });
+              } catch (err) {
+                throw friendlyNetworkError(this.name, err);
+              }
+            } else if ((res.status === 401 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[OpenRouter] Request failed (${res.status}). Retrying with fallback key...`);
+              if (typeof refreshAIModelUI === "function") refreshAIModelUI();
+              try {
+                res = await fetch(`${this.BASE}/chat/completions`, {
+                  method: "POST",
+                  headers: this._headers(),
+                  signal,
+                  body: JSON.stringify({ model, messages, stream: true }),
+                });
+              } catch (err) {
+                throw friendlyNetworkError(this.name, err);
+              }
+            }
+          }
+          if (!res.ok || !res.body)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buf = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buf += decoder.decode(value, { stream: true });
+            let idx;
+            while ((idx = buf.indexOf("\n\n")) !== -1) {
+              const chunk = buf.slice(0, idx);
+              buf = buf.slice(idx + 2);
+              const line = chunk.split("\n").find((l) => l.startsWith("data:"));
+              if (!line) continue;
+              const data = line.slice(5).trim();
+              if (data === "[DONE]") return;
+              try {
+                const obj = JSON.parse(data);
+                const delta = obj.choices?.[0]?.delta?.content;
+                if (delta) yield delta;
+              } catch (e) {
+                /* ignore malformed SSE fragment */
+              }
+            }
+          }
+        }
+      }
+
+      /* ============================================================================
+   AI SERVICE — the only thing the rest of the app talks to.
+   ========================================================================= */
+      const AIService = (() => {
+        const adapters = {
+          "gemini-local": new GeminiLocalAdapter(),
+          openrouter: new OpenRouterAdapter(),
+        };
+        function get(id) {
+          return adapters[id];
+        }
+        function list() {
+          return Object.values(adapters);
+        }
+        function active() {
+          return adapters[settings.aiProvider] || adapters["gemini-local"];
+        }
+        async function generate({ question, signal }) {
+          const adapter = active();
+          const messages = [
+            { role: "system", content: personaText() + MOOD_INSTRUCTION },
+            { role: "user", content: question },
+          ];
+          return adapter.generate({
+            messages,
+            model: settings.aiModel,
+            signal,
+          });
+        }
+        return { get, list, active, generate };
+      })();
+
+      /* ============================================================================
+   ============================  TTS PROVIDER SYSTEM  =======================
+   ============================================================================
+   Every adapter implements:
+     id, name, needsKey
+     async listVoices({ force }) -> [{ id, name, meta }]
+     async listModels({ force }) -> [{ id, name }]
+     async testConnection() -> { ok, message }
+     async getUsage() -> { remaining, limit, used, unit, label } | null
+     async generateSpeech({ text, model, voice, settings, signal }) -> { blob } | { utterance: SpeechSynthesisUtterance }
+   Generic voice-setting sliders (stability/similarity/style/speed, 0..1 except
+   speed) are mapped onto each provider's own vocabulary inside the adapter —
+   nothing outside this section knows the words "ElevenLabs" or "Noiz".
+   ========================================================================= */
+
+      /* ---------------------------------------------------------------------------
+   Browser (offline) — always-available fallback using the Web Speech API.
+   No key, no usage tracking, but never blocks the show if a paid provider
+   is misconfigured or down.
+   ------------------------------------------------------------------------- */
+      class BrowserTTSAdapter {
+        id = "browser";
+        name = "Browser (offline)";
+        needsKey = false;
+        async listVoices() {
+          const voices = window.speechSynthesis
+            ? window.speechSynthesis.getVoices()
+            : [];
+          return voices.map((v) => ({
+            id: v.voiceURI,
+            name: `${v.name} (${v.lang})`,
+          }));
+        }
+        async listModels() {
+          return [{ id: "system", name: "System voices" }];
+        }
+        async testConnection() {
+          return {
+            ok: !!window.speechSynthesis,
+            message: window.speechSynthesis
+              ? "Web Speech API available."
+              : "Web Speech API not supported in this browser.",
+          };
+        }
+        async getUsage() {
+          return null;
+        }
+        async generateSpeech({ text, voice, settings: vs }) {
+          const utter = new SpeechSynthesisUtterance(text);
+          const all = window.speechSynthesis.getVoices();
+          const chosen = all.find((v) => v.voiceURI === voice);
+          if (chosen) utter.voice = chosen;
+          utter.rate = Math.max(0.5, Math.min(2, vs.speed || 1));
+          utter.pitch = 0.8 + (vs.style || 0) * 0.6; // rough style->pitch mapping, the only knob Web Speech exposes
+          return { utterance: utter };
+        }
+      }
+
+      /* ---------------------------------------------------------------------------
+   ElevenLabs
+   ------------------------------------------------------------------------- */
+      class ElevenLabsAdapter {
+        id = "elevenlabs";
+        name = "ElevenLabs";
+        needsKey = true;
+        BASE = "https://api.elevenlabs.io/v1";
+        _voicesCache = null;
+        _voicesCacheAt = 0;
+        _modelsCache = null;
+        _modelsCacheAt = 0;
+        CACHE_TTL = 60 * 60 * 1000;
+
+        _headers() {
+          return { "xi-api-key": SecureStorage.get(this.id) };
+        }
+        async listVoices({ force = false } = {}) {
+          const now = Date.now();
+          if (
+            !force &&
+            this._voicesCache &&
+            now - this._voicesCacheAt < this.CACHE_TTL
+          )
+            return this._voicesCache;
+          let res;
+          try {
+            res = await fetchTimeout(
+              `${this.BASE}/voices`,
+              { headers: this._headers() },
+              { timeoutMs: 12000, retries: 1 },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const json = await res.json();
+          const list = (json.voices || []).map((v) => ({
+            id: v.voice_id,
+            name: v.name,
+            meta: v.labels || {},
+          }));
+          this._voicesCache = list;
+          this._voicesCacheAt = now;
+          return list;
+        }
+        async listModels({ force = false } = {}) {
+          const now = Date.now();
+          if (
+            !force &&
+            this._modelsCache &&
+            now - this._modelsCacheAt < this.CACHE_TTL
+          )
+            return this._modelsCache;
+          let res;
+          try {
+            res = await fetchTimeout(
+              `${this.BASE}/models`,
+              { headers: this._headers() },
+              { timeoutMs: 12000, retries: 1 },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const json = await res.json();
+          const list = (Array.isArray(json) ? json : [])
+            .filter((m) => m.can_do_text_to_speech !== false)
+            .map((m) => ({ id: m.model_id, name: m.name || m.model_id }));
+          this._modelsCache = list;
+          this._modelsCacheAt = now;
+          return list;
+        }
+        async testConnection() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return { ok: false, message: "No API key configured." };
+          try {
+            const res = await fetchTimeout(
+              `${this.BASE}/user`,
+              { headers: this._headers() },
+              { timeoutMs: 10000, retries: 0 },
+            );
+            if (!res.ok)
+              throw friendlyHTTPError(
+                this.name,
+                res.status,
+                await res.text().catch(() => ""),
+              );
+            return { ok: true, message: "Connected." };
+          } catch (err) {
+            if (err instanceof ProviderError)
+              return { ok: false, message: err.message };
+            return {
+              ok: false,
+              message: friendlyNetworkError(this.name, err).message,
+            };
+          }
+        }
+        async getUsage() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return null;
+          try {
+            const res = await fetchTimeout(
+              `${this.BASE}/user`,
+              { headers: this._headers() },
+              { timeoutMs: 10000, retries: 0 },
+            );
+            if (!res.ok) return null;
+            const json = await res.json();
+            const sub = json.subscription;
+            if (!sub || sub.character_limit == null) return null;
+            return {
+              remaining: sub.character_limit - sub.character_count,
+              limit: sub.character_limit,
+              used: sub.character_count,
+              unit: "characters",
+              label: "ElevenLabs",
+            };
+          } catch (e) {
+            return null;
+          }
+        }
+        async generateSpeech({ text, model, voice, settings: vs, signal }) {
+          if (!SecureStorage.get(this.id))
+            throw new ProviderError("No ElevenLabs API key configured.", {
+              provider: this.name,
+              action: "replace-key",
+            });
+          if (!voice)
+            throw new ProviderError("No ElevenLabs voice selected.", {
+              provider: this.name,
+            });
+          let res;
+          try {
+            res = await fetch(
+              `${this.BASE}/text-to-speech/${encodeURIComponent(voice)}/stream?optimize_streaming_latency=3`,
+              {
+                method: "POST",
+                signal,
+                headers: {
+                  ...this._headers(),
+                  "Content-Type": "application/json",
+                  Accept: "audio/mpeg",
+                },
+                body: JSON.stringify({
+                  text,
+                  model_id: model || "eleven_multilingual_v2",
+                  voice_settings: {
+                    stability: vs.stability,
+                    similarity_boost: vs.similarity,
+                    style: vs.style,
+                    use_speaker_boost: true,
+                    speed: vs.speed,
+                  },
+                }),
+              },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok) {
+            if ((res.status === 401 || res.status === 402 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[ElevenLabs] Request failed (${res.status}). Retrying with fallback key...`);
+              if (typeof refreshTTSModelVoiceUI === "function") refreshTTSModelVoiceUI();
+              try {
+                res = await fetch(
+                  `${this.BASE}/text-to-speech/${encodeURIComponent(voice)}/stream?optimize_streaming_latency=3`,
+                  {
+                    method: "POST",
+                    signal,
+                    headers: {
+                      ...this._headers(),
+                      "Content-Type": "application/json",
+                      Accept: "audio/mpeg",
+                    },
+                    body: JSON.stringify({
+                      text,
+                      model_id: model || "eleven_multilingual_v2",
+                      voice_settings: {
+                        stability: vs.stability,
+                        similarity_boost: vs.similarity,
+                        style: vs.style,
+                        use_speaker_boost: true,
+                        speed: vs.speed,
+                      },
+                    }),
+                  },
+                );
+              } catch (err) {
+                throw friendlyNetworkError(this.name, err);
+              }
+            }
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const blob = await res.blob();
+          return { blob };
+        }
+      }
+
+      /* ---------------------------------------------------------------------------
+   Noiz
+   ⚠️ Noiz's public docs don't publish a stable, fully-specified REST schema
+   the way ElevenLabs/OpenRouter do, so the exact paths/fields below are the
+   conventional REST shape most TTS APIs use (api key header + POST text/voice
+   in, audio bytes out) rather than something verified against Noiz's current
+   docs. Everything provider-specific is isolated to this one class and the
+   NOIZ_API constants right below it — if your dashboard shows different
+   paths or field names, this is the only place you need to change.
+   ------------------------------------------------------------------------- */
+      const NOIZ_API = {
+        base: "https://api.noiz.ai",
+        voices: "/v1/voices",
+        models: "/v1/models",
+        account: "/v1/account",
+        synthesize: "/v1/tts/generate",
+      };
+      class NoizAdapter {
+        id = "noiz";
+        name = "Noiz";
+        needsKey = true;
+        _voicesCache = null;
+        _voicesCacheAt = 0;
+        _modelsCache = null;
+        _modelsCacheAt = 0;
+        CACHE_TTL = 60 * 60 * 1000;
+
+        _headers() {
+          return { Authorization: `Bearer ${SecureStorage.get(this.id)}` };
+        }
+        async listVoices({ force = false } = {}) {
+          const now = Date.now();
+          if (
+            !force &&
+            this._voicesCache &&
+            now - this._voicesCacheAt < this.CACHE_TTL
+          )
+            return this._voicesCache;
+          let res;
+          try {
+            res = await fetchTimeout(
+              NOIZ_API.base + NOIZ_API.voices,
+              { headers: this._headers() },
+              { timeoutMs: 12000, retries: 1 },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const json = await res.json();
+          const raw =
+            json.voices || json.data || (Array.isArray(json) ? json : []);
+          const list = raw.map((v) => ({
+            id: v.id || v.voice_id,
+            name: v.name || v.id || v.voice_id,
+            meta: v,
+          }));
+          this._voicesCache = list;
+          this._voicesCacheAt = now;
+          return list;
+        }
+        async listModels({ force = false } = {}) {
+          const now = Date.now();
+          if (
+            !force &&
+            this._modelsCache &&
+            now - this._modelsCacheAt < this.CACHE_TTL
+          )
+            return this._modelsCache;
+          let res;
+          try {
+            res = await fetchTimeout(
+              NOIZ_API.base + NOIZ_API.models,
+              { headers: this._headers() },
+              { timeoutMs: 12000, retries: 1 },
+            );
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const json = await res.json();
+          const raw =
+            json.models || json.data || (Array.isArray(json) ? json : []);
+          const list = raw.map((m) => ({
+            id: m.id || m.model_id,
+            name: m.name || m.id || m.model_id,
+          }));
+          this._modelsCache = list;
+          this._modelsCacheAt = now;
+          return list;
+        }
+        async testConnection() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return { ok: false, message: "No API key configured." };
+          try {
+            await this.listVoices({ force: true });
+            return { ok: true, message: "Connected." };
+          } catch (err) {
+            return {
+              ok: false,
+              message:
+                err instanceof ProviderError
+                  ? err.message
+                  : String(err.message || err),
+            };
+          }
+        }
+        async getUsage() {
+          const key = SecureStorage.get(this.id);
+          if (!key) return null;
+          try {
+            const res = await fetchTimeout(
+              NOIZ_API.base + NOIZ_API.account,
+              { headers: this._headers() },
+              { timeoutMs: 10000, retries: 0 },
+            );
+            if (!res.ok) return null;
+            const json = await res.json();
+            const remaining =
+              json.remaining_characters ??
+              json.credits_remaining ??
+              json.quota?.remaining ??
+              null;
+            const limit =
+              json.character_limit ??
+              json.credits_limit ??
+              json.quota?.limit ??
+              null;
+            if (remaining == null && limit == null) return null;
+            return {
+              remaining,
+              limit,
+              used:
+                limit != null && remaining != null ? limit - remaining : null,
+              unit: "credits",
+              label: "Noiz",
+            };
+          } catch (e) {
+            return null;
+          }
+        }
+        async generateSpeech({ text, model, voice, settings: vs, signal }) {
+          if (!SecureStorage.get(this.id))
+            throw new ProviderError("No Noiz API key configured.", {
+              provider: this.name,
+              action: "replace-key",
+            });
+          if (!voice)
+            throw new ProviderError("No Noiz voice selected.", {
+              provider: this.name,
+            });
+          let res;
+          try {
+            res = await fetch(NOIZ_API.base + NOIZ_API.synthesize, {
+              method: "POST",
+              signal,
+              headers: {
+                ...this._headers(),
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                text,
+                voice_id: voice,
+                model_id: model,
+                stability: vs.stability,
+                similarity: vs.similarity,
+                style: vs.style,
+                speed: vs.speed,
+              }),
+            });
+          } catch (err) {
+            throw friendlyNetworkError(this.name, err);
+          }
+          if (!res.ok) {
+            if ((res.status === 401 || res.status === 402 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[Noiz] Request failed (${res.status}). Retrying with fallback key...`);
+              if (typeof refreshTTSModelVoiceUI === "function") refreshTTSModelVoiceUI();
+              try {
+                res = await fetch(NOIZ_API.base + NOIZ_API.synthesize, {
+                  method: "POST",
+                  signal,
+                  headers: {
+                    ...this._headers(),
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    text,
+                    voice_id: voice,
+                    model_id: model,
+                    stability: vs.stability,
+                    similarity: vs.similarity,
+                    style: vs.style,
+                    speed: vs.speed,
+                  }),
+                });
+              } catch (err) {
+                throw friendlyNetworkError(this.name, err);
+              }
+            }
+          }
+          if (!res.ok)
+            throw friendlyHTTPError(
+              this.name,
+              res.status,
+              await res.text().catch(() => ""),
+            );
+          const blob = await res.blob();
+          return { blob };
+        }
+      }
+
+      /* ============================================================================
+   TTS SERVICE — the only thing the rest of the app talks to. Owns the
+   speak queue, playback, usage refresh, and barge-in cancellation.
+   ========================================================================= */
+      const TTSService = (() => {
+        const adapters = {
+          browser: new BrowserTTSAdapter(),
+          elevenlabs: new ElevenLabsAdapter(),
+          noiz: new NoizAdapter(),
+        };
+        function get(id) {
+          return adapters[id];
+        }
+        function list() {
+          return Object.values(adapters);
+        }
+        function active() {
+          return adapters[settings.ttsProvider] || adapters["browser"];
+        }
+
+        const queue = [];
+        let currentAudio = null;
+        let currentController = null;
+        let busy = false; // true from the moment a queue item starts generating until it finishes playing — closes the race where a fast follow-up enqueue() lands while generateSpeech()'s network call is still in flight and speakingNow() would otherwise (briefly, wrongly) say "idle"
+
+        function speakingNow() {
+          return (
+            busy ||
+            !!currentAudio ||
+            (window.speechSynthesis && window.speechSynthesis.speaking)
+          );
+        }
+
+        function enqueue(text) {
+          if (!text) return;
+          queue.push(text);
+          if (!speakingNow()) playNext();
+        }
+
+        async function playNext() {
+          const text = queue.shift();
+          if (!text) {
+            busy = false;
+            isTalking = false;
+            el.dotTalk.classList.remove("live");
+            if (listening) setMicDot("live");
+            if (actions["Idle"]) playAction("Idle");
+            if (typeof WakeWordManager !== "undefined") {
+              WakeWordManager.onResponseFinished();
+            }
+            return;
+          }
+          busy = true;
+          const adapter = active();
+          currentController = new AbortController();
+          try {
+            const result = await adapter.generateSpeech({
+              text,
+              model: settings.ttsModel,
+              voice: settings.ttsVoice,
+              settings: settings.voiceSettings,
+              signal: currentController.signal,
+            });
+            onTalkStart();
+            if (result.utterance) {
+              const utter = result.utterance;
+              utter.onend = () => {
+                currentAudio = null;
+                playNext();
+              };
+              utter.onerror = () => {
+                currentAudio = null;
+                playNext();
+              };
+              currentAudio = utter; // sentinel, not a real Audio element, but marks "busy"
+              window.speechSynthesis.speak(utter);
+            } else if (result.blob) {
+              const url = URL.createObjectURL(result.blob);
+              const audio = new Audio(url);
+              currentAudio = audio;
+              audio.onended = () => {
+                URL.revokeObjectURL(url);
+                currentAudio = null;
+                playNext();
+              };
+              audio.onerror = () => {
+                URL.revokeObjectURL(url);
+                currentAudio = null;
+                playNext();
+              };
+              audio.play().catch(() => {
+                URL.revokeObjectURL(url);
+                currentAudio = null;
+                playNext();
+              });
+            }
+            refreshUsageDisplay(); // fire-and-forget, non-blocking
+          } catch (err) {
+            currentAudio = null;
+            if (err && err.name === "AbortError") return; // cancelled by barge-in, don't surface as an error
+            console.warn(`[TTS] ${adapter.name} failed (${err.message}). Falling back to browser voice.`);
+            if (adapter.id !== "browser") {
+              try {
+                const fallbackResult = await adapters["browser"].generateSpeech({
+                  text,
+                  voice: "",
+                  settings: settings.voiceSettings
+                });
+                onTalkStart();
+                if (fallbackResult.utterance) {
+                  const utter = fallbackResult.utterance;
+                  utter.onend = () => {
+                    currentAudio = null;
+                    playNext();
+                  };
+                  utter.onerror = () => {
+                    currentAudio = null;
+                    playNext();
+                  };
+                  currentAudio = utter;
+                  window.speechSynthesis.speak(utter);
+                  return;
+                }
+              } catch (fallbackErr) {
+                console.error("[TTS] Browser voice fallback failed:", fallbackErr);
+              }
+            }
+            showTTSError(
+              err instanceof ProviderError
+                ? err.message
+                : "Speech generation failed.",
+            );
+            playNext(); // keep going through the rest of the queue rather than stalling the show
+          }
+        }
+
+        function cancelAll() {
+          queue.length = 0;
+          busy = false;
+          if (currentController) {
+            try {
+              currentController.abort();
+            } catch (e) {}
+            currentController = null;
+          }
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+          if (currentAudio && currentAudio.pause) {
+            try {
+              currentAudio.pause();
+            } catch (e) {}
+          }
+          currentAudio = null;
+        }
+
+        async function preview(text) {
+          const adapter = active();
+          const ac = new AbortController();
+          const result = await adapter.generateSpeech({
+            text,
+            model: settings.ttsModel,
+            voice: settings.ttsVoice,
+            settings: settings.voiceSettings,
+            signal: ac.signal,
+          });
+          if (result.utterance) window.speechSynthesis.speak(result.utterance);
+          else if (result.blob) {
+            const url = URL.createObjectURL(result.blob);
+            const audio = new Audio(url);
+            audio.onended = () => URL.revokeObjectURL(url);
+            audio.play();
+          }
+        }
+
+        return { get, list, active, enqueue, cancelAll, preview, speakingNow };
+      })();
+
+      /* Bridges TTSService playback state into the existing talking/mood/mic-dot
+   machinery so barge-in, idle animation, and the ON AIR dot all keep working
+   regardless of which TTS provider produced the audio. */
+      function onTalkStart() {
+        if (!isTalking) {
+          isTalking = true;
+          el.dotTalk.classList.add("live");
+          if (listening) setMicDot("warn");
+          playMoodAction(pendingMoodAction || "Idle Talking");
+          if (typeof WakeWordManager !== "undefined") {
+            WakeWordManager.onResponseStarted();
+          }
+        }
+      }
+
+      function showTTSError(msg) {
+        el.ttsErrorBox.innerHTML = `<div class="err-box"><b>Unable to generate speech.</b>${msg}</div>`;
+        setTimeout(() => {
+          el.ttsErrorBox.innerHTML = "";
+        }, 8000);
+      }
+      function showAIError(msg) {
+        el.aiErrorBox.innerHTML = `<div class="err-box"><b>Unable to generate a reply.</b>${msg}</div>`;
+        setTimeout(() => {
+          el.aiErrorBox.innerHTML = "";
+        }, 8000);
+      }
+
+      /* ============================================================================
+   PROVIDER CONTROL-CENTER UI
+   ========================================================================= */
+      function setBadge(badgeEl, textEl, state, text) {
+        badgeEl.className = "badge" + (state ? " " + state : "");
+        textEl.textContent = text;
+      }
+
+      /* ---- AI section ---- */
+      function populateProviderSelect(selectEl, providers, activeId) {
+        selectEl.innerHTML = "";
+        providers.forEach((p) => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = p.name;
+          selectEl.appendChild(opt);
+        });
+        selectEl.value = activeId;
+      }
+      populateProviderSelect(
+        el.aiProviderSelect,
+        AIService.list(),
+        settings.aiProvider,
+      );
+      populateProviderSelect(
+        el.ttsProviderSelect,
+        TTSService.list(),
+        settings.ttsProvider,
+      );
+
+      let aiModelsFull = [];
+      async function refreshAIModelUI({ force = false } = {}) {
+        const adapter = AIService.active();
+        el.aiKeyRow.style.display = adapter.needsKey ? "flex" : "none";
+        el.aiKeyInput.value = "";
+        el.aiKeyInput.placeholder = SecureStorage.has(adapter.id)
+          ? `Key on file: ${maskKey(SecureStorage.get(adapter.id))}`
+          : "Paste API key";
+        el.aiModelSearchRow.style.display =
+          adapter.id === "openrouter" ? "flex" : "none";
+
+        /* Show key source info and toggle button */
+        if (adapter.needsKey) {
+          const src = SecureStorage.source(adapter.id);
+          const hasNewEnv = SecureStorage.hasEnvKey(adapter.id, "new");
+          const hasOldEnv = SecureStorage.hasEnvKey(adapter.id, "old");
+          const showToggle = hasNewEnv && hasOldEnv && src !== "manual";
+
+          el.aiKeyToggle.style.display = showToggle ? "inline-block" : "none";
+          if (showToggle) {
+            const slot = SecureStorage.getSlot(adapter.id);
+            el.aiKeyToggle.textContent = slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
+          }
+
+          if (src.startsWith("env-")) {
+            const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
+            el.aiKeySource.textContent = `Using ${slotLabel}`;
+            el.aiKeySource.style.display = "block";
+          } else if (src === "manual") {
+            el.aiKeySource.textContent = "Using manually pasted key";
+            el.aiKeySource.style.display = "block";
+          } else {
+            el.aiKeySource.style.display = "none";
+          }
+        } else {
+          el.aiKeyToggle.style.display = "none";
+          el.aiKeySource.style.display = "none";
+        }
+
+        if (adapter.needsKey && !SecureStorage.has(adapter.id)) {
+          setBadge(el.aiBadge, el.aiBadgeText, "warn", "no key");
+          el.aiModelSelect.innerHTML =
+            '<option value="">Add an API key or set one in .env</option>';
+          el.aiModelMeta.textContent = "";
+          return;
+        }
+        setBadge(el.aiBadge, el.aiBadgeText, "", "loading…");
+        try {
+          aiModelsFull = await adapter.listModels({ force });
+          renderAIModelOptions(aiModelsFull);
+          if (
+            !settings.aiModel ||
+            !aiModelsFull.some((m) => m.id === settings.aiModel)
+          ) {
+            settings.aiModel = aiModelsFull[0]?.id || "";
+            saveSettings();
+          }
+          el.aiModelSelect.value = settings.aiModel;
+          updateAIModelMeta();
+          setBadge(el.aiBadge, el.aiBadgeText, "ok", "ready");
+        } catch (err) {
+          setBadge(el.aiBadge, el.aiBadgeText, "err", "error");
+          showAIError(err.message || "Couldn't load models.");
+        }
+      }
+      function renderAIModelOptions(models) {
+        el.aiModelSelect.innerHTML = "";
+        models.forEach((m) => {
+          const opt = document.createElement("option");
+          opt.value = m.id;
+          opt.textContent = m.name;
+          el.aiModelSelect.appendChild(opt);
+        });
+      }
+      function updateAIModelMeta() {
+        const m = aiModelsFull.find((m) => m.id === el.aiModelSelect.value);
+        if (!m) {
+          el.aiModelMeta.textContent = "";
+          return;
+        }
+        const parts = [];
+        if (m.provider) parts.push(m.provider);
+        if (m.context) parts.push(`ctx ${fmtNum(m.context)}`);
+        if (m.priceIn != null)
+          parts.push(`in $${(m.priceIn * 1e6).toFixed(2)}/M`);
+        if (m.priceOut != null)
+          parts.push(`out $${(m.priceOut * 1e6).toFixed(2)}/M`);
+        el.aiModelMeta.textContent = parts.join(" · ");
+      }
+
+      el.aiProviderSelect.addEventListener("change", () => {
+        settings.aiProvider = el.aiProviderSelect.value;
+        settings.aiModel = "";
+        saveSettings();
+        refreshAIModelUI();
+      });
+      el.aiModelSelect.addEventListener("change", () => {
+        settings.aiModel = el.aiModelSelect.value;
+        saveSettings();
+        updateAIModelMeta();
+      });
+      el.aiModelRefresh.addEventListener("click", () =>
+        refreshAIModelUI({ force: true }),
+      );
+      el.aiModelSearch.addEventListener(
+        "input",
+        debounce(() => {
+          const q = el.aiModelSearch.value.trim().toLowerCase();
+          const filtered = q
+            ? aiModelsFull.filter(
+                (m) =>
+                  m.name.toLowerCase().includes(q) ||
+                  m.id.toLowerCase().includes(q) ||
+                  (m.provider || "").toLowerCase().includes(q),
+              )
+            : aiModelsFull;
+          renderAIModelOptions(filtered);
+          if (filtered.some((m) => m.id === settings.aiModel))
+            el.aiModelSelect.value = settings.aiModel;
+        }, 200),
+      );
+      el.aiKeySave.addEventListener("click", () => {
+        const v = el.aiKeyInput.value.trim();
+        if (!v) return;
+        SecureStorage.set(AIService.active().id, v);
+        el.aiKeyInput.value = "";
+        refreshAIModelUI({ force: true });
+      });
+      el.aiKeyRemove.addEventListener("click", () => {
+        SecureStorage.remove(AIService.active().id);
+        refreshAIModelUI();
+      });
+      el.aiKeyToggle.addEventListener("click", () => {
+        const adapter = AIService.active();
+        const newSlot = SecureStorage.toggleSlot(adapter.id);
+        console.log(`[AI] Switched to ${newSlot} .env key for ${adapter.id}`);
+        refreshAIModelUI({ force: true });
+      });
+      el.aiTestBtn.addEventListener("click", async () => {
+        el.aiTestBtn.disabled = true;
+        el.aiTestBtn.innerHTML = '<span class="spinner"></span>';
+        const res = await AIService.active().testConnection();
+        el.aiTestBtn.disabled = false;
+        el.aiTestBtn.textContent = "Test Connection";
+        setBadge(
+          el.aiBadge,
+          el.aiBadgeText,
+          res.ok ? "ok" : "err",
+          res.ok ? "ready" : "error",
+        );
+        if (!res.ok) showAIError(res.message);
+      });
+
+      /* ---- TTS section ---- */
+      let ttsVoicesFull = [];
+      async function refreshTTSModelVoiceUI({ force = false } = {}) {
+        const adapter = TTSService.active();
+        el.ttsKeyRow.style.display = adapter.needsKey ? "flex" : "none";
+        el.ttsKeyInput.value = "";
+        el.ttsKeyInput.placeholder = SecureStorage.has(adapter.id)
+          ? `Key on file: ${maskKey(SecureStorage.get(adapter.id))}`
+          : "Paste API key";
+
+        /* Show key source info and toggle button */
+        if (adapter.needsKey) {
+          const src = SecureStorage.source(adapter.id);
+          const hasNewEnv = SecureStorage.hasEnvKey(adapter.id, "new");
+          const hasOldEnv = SecureStorage.hasEnvKey(adapter.id, "old");
+          const showToggle = hasNewEnv && hasOldEnv && src !== "manual";
+
+          el.ttsKeyToggle.style.display = showToggle ? "inline-block" : "none";
+          if (showToggle) {
+            const slot = SecureStorage.getSlot(adapter.id);
+            el.ttsKeyToggle.textContent = slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
+          }
+
+          if (src.startsWith("env-")) {
+            const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
+            el.ttsKeySource.textContent = `Using ${slotLabel}`;
+            el.ttsKeySource.style.display = "block";
+          } else if (src === "manual") {
+            el.ttsKeySource.textContent = "Using manually pasted key";
+            el.ttsKeySource.style.display = "block";
+          } else {
+            el.ttsKeySource.style.display = "none";
+          }
+        } else {
+          el.ttsKeyToggle.style.display = "none";
+          el.ttsKeySource.style.display = "none";
+        }
+
+        if (adapter.needsKey && !SecureStorage.has(adapter.id)) {
+          setBadge(el.ttsBadge, el.ttsBadgeText, "warn", "no key");
+          el.ttsModelSelect.innerHTML =
+            '<option value="">Add an API key or set one in .env</option>';
+          el.ttsVoiceSelect.innerHTML = '<option value="">—</option>';
+          el.ttsUsageBox.textContent = "Usage information unavailable";
+          return;
+        }
+        setBadge(el.ttsBadge, el.ttsBadgeText, "", "loading…");
+        try {
+          const [models, voices] = await Promise.all([
+            adapter.listModels({ force }),
+            adapter.listVoices({ force }),
+          ]);
+          el.ttsModelSelect.innerHTML = "";
+          models.forEach((m) => {
+            const opt = document.createElement("option");
+            opt.value = m.id;
+            opt.textContent = m.name;
+            el.ttsModelSelect.appendChild(opt);
+          });
+          if (
+            !settings.ttsModel ||
+            !models.some((m) => m.id === settings.ttsModel)
+          )
+            settings.ttsModel = models[0]?.id || "";
+          el.ttsModelSelect.value = settings.ttsModel;
+
+          ttsVoicesFull = voices;
+          if (adapter.id === "browser" && !voices.length) {
+            // Chrome loads system voices asynchronously; retry once they arrive.
+            window.speechSynthesis.onvoiceschanged = () =>
+              refreshTTSModelVoiceUI();
+          }
+          el.ttsVoiceSelect.innerHTML = "";
+          voices.forEach((v) => {
+            const opt = document.createElement("option");
+            opt.value = v.id;
+            opt.textContent = v.name;
+            el.ttsVoiceSelect.appendChild(opt);
+          });
+          if (
+            !settings.ttsVoice ||
+            !voices.some((v) => v.id === settings.ttsVoice)
+          )
+            settings.ttsVoice = voices[0]?.id || "";
+          el.ttsVoiceSelect.value = settings.ttsVoice;
+          saveSettings();
+
+          setBadge(el.ttsBadge, el.ttsBadgeText, "ok", "ready");
+          refreshUsageDisplay();
+        } catch (err) {
+          setBadge(el.ttsBadge, el.ttsBadgeText, "err", "error");
+          showTTSError(err.message || "Couldn't load voices/models.");
+        }
+      }
+      async function refreshUsageDisplay() {
+        try {
+          const usage = await TTSService.active().getUsage();
+          if (!usage) {
+            el.ttsUsageBox.textContent = "Usage information unavailable";
+            return;
+          }
+          const pct =
+            usage.limit && usage.remaining != null
+              ? Math.max(
+                  0,
+                  Math.min(100, (usage.remaining / usage.limit) * 100),
+                )
+              : null;
+          el.ttsUsageBox.innerHTML = `
+      <div class="u-title">${usage.label}</div>
+      Remaining: ${usage.remaining != null ? fmtNum(usage.remaining) + " " + usage.unit : "—"}<br>
+      ${usage.used != null ? "Used: " + fmtNum(usage.used) + " " + usage.unit : ""}
+      ${pct != null ? `<div class="usage-bar"><i style="width:${pct}%"></i></div>` : ""}
+    `;
+        } catch (e) {
+          el.ttsUsageBox.textContent = "Usage information unavailable";
+        }
+      }
+
+      el.ttsProviderSelect.addEventListener("change", () => {
+        settings.ttsProvider = el.ttsProviderSelect.value;
+        settings.ttsModel = "";
+        settings.ttsVoice = "";
+        saveSettings();
+        refreshTTSModelVoiceUI();
+      });
+      el.ttsModelSelect.addEventListener("change", () => {
+        settings.ttsModel = el.ttsModelSelect.value;
+        saveSettings();
+      });
+      el.ttsVoiceSelect.addEventListener("change", () => {
+        settings.ttsVoice = el.ttsVoiceSelect.value;
+        saveSettings();
+      });
+      el.ttsModelRefresh.addEventListener("click", () =>
+        refreshTTSModelVoiceUI({ force: true }),
+      );
+      el.ttsKeySave.addEventListener("click", () => {
+        const v = el.ttsKeyInput.value.trim();
+        if (!v) return;
+        SecureStorage.set(TTSService.active().id, v);
+        el.ttsKeyInput.value = "";
+        refreshTTSModelVoiceUI({ force: true });
+      });
+      el.ttsKeyRemove.addEventListener("click", () => {
+        SecureStorage.remove(TTSService.active().id);
+        refreshTTSModelVoiceUI();
+      });
+      el.ttsKeyToggle.addEventListener("click", () => {
+        const adapter = TTSService.active();
+        const newSlot = SecureStorage.toggleSlot(adapter.id);
+        console.log(`[TTS] Switched to ${newSlot} .env key for ${adapter.id}`);
+        refreshTTSModelVoiceUI({ force: true });
+      });
+      el.ttsTestBtn.addEventListener("click", async () => {
+        el.ttsTestBtn.disabled = true;
+        el.ttsTestBtn.innerHTML = '<span class="spinner"></span>';
+        const res = await TTSService.active().testConnection();
+        el.ttsTestBtn.disabled = false;
+        el.ttsTestBtn.textContent = "Test Connection";
+        setBadge(
+          el.ttsBadge,
+          el.ttsBadgeText,
+          res.ok ? "ok" : "err",
+          res.ok ? "ready" : "error",
+        );
+        if (!res.ok) showTTSError(res.message);
+        else refreshUsageDisplay();
+      });
+      el.ttsPreviewBtn.addEventListener("click", async () => {
+        el.ttsPreviewBtn.disabled = true;
+        el.ttsPreviewBtn.innerHTML = '<span class="spinner"></span>';
+        try {
+          await TTSService.preview("Hi, this is a preview of how I'll sound.");
+          refreshUsageDisplay();
+        } catch (err) {
+          showTTSError(err.message || "Preview failed.");
+        } finally {
+          el.ttsPreviewBtn.disabled = false;
+          el.ttsPreviewBtn.textContent = "Preview Voice";
+        }
+      });
+
+      el.voiceStability.value = settings.voiceSettings.stability;
+      el.voiceStabilityVal.textContent =
+        settings.voiceSettings.stability.toFixed(2);
+      el.voiceSimilarity.value = settings.voiceSettings.similarity;
+      el.voiceSimilarityVal.textContent =
+        settings.voiceSettings.similarity.toFixed(2);
+      el.voiceStyle.value = settings.voiceSettings.style;
+      el.voiceStyleVal.textContent = settings.voiceSettings.style.toFixed(2);
+      el.voiceSpeed.value = settings.voiceSettings.speed;
+      el.voiceSpeedVal.textContent = settings.voiceSettings.speed.toFixed(2);
+
+      wireSlider(el.voiceStability, el.voiceStabilityVal, 2, (v) => {
+        settings.voiceSettings.stability = v;
+        saveSettings();
+      });
+      wireSlider(el.voiceSimilarity, el.voiceSimilarityVal, 2, (v) => {
+        settings.voiceSettings.similarity = v;
+        saveSettings();
+      });
+      wireSlider(el.voiceStyle, el.voiceStyleVal, 2, (v) => {
+        settings.voiceSettings.style = v;
+        saveSettings();
+      });
+      wireSlider(el.voiceSpeed, el.voiceSpeedVal, 2, (v) => {
+        settings.voiceSettings.speed = v;
+        saveSettings();
+      });
+
+      /* Kick off provider panels in the background — never blocks avatar/camera load. */
+      refreshAIModelUI();
+      refreshTTSModelVoiceUI();
+
+      /* ---- STT & Wake Word UI Setup ---- */
+      function showSTTStatus(msg, type = "info") {
+        if (!el.sttStatusNote) return;
+        el.sttStatusNote.textContent = msg;
+        el.sttStatusNote.style.color = type === "err" ? "var(--err)" : type === "ok" ? "var(--ok)" : "var(--text-dim)";
+      }
+
+      function refreshSTTUI() {
+        const provider = el.sttProviderSelect ? el.sttProviderSelect.value : (settings.sttProvider || "deepgram");
+        const isDeepgram = provider === "deepgram";
+        if (el.sttKeyRow) el.sttKeyRow.style.display = isDeepgram ? "flex" : "none";
+
+        if (el.sttKeyInput) {
+          el.sttKeyInput.value = "";
+          el.sttKeyInput.placeholder = SecureStorage.has("deepgram")
+            ? `Key on file: ${maskKey(SecureStorage.get("deepgram"))}`
+            : "Paste Deepgram API Key";
+        }
+
+        if (el.sttKeySource) {
+          if (isDeepgram) {
+            const src = SecureStorage.source("deepgram");
+            if (src.startsWith("env-")) {
+              const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
+              el.sttKeySource.textContent = `Using ${slotLabel}`;
+              el.sttKeySource.style.display = "block";
+            } else if (src === "manual") {
+              el.sttKeySource.textContent = "Using manually pasted key";
+              el.sttKeySource.style.display = "block";
+            } else {
+              el.sttKeySource.textContent = "No key configured. Set in .env or paste above.";
+              el.sttKeySource.style.display = "block";
+            }
+          } else {
+            el.sttKeySource.style.display = "none";
+          }
+        }
+
+        if (el.wakePhraseRow) {
+          el.wakePhraseRow.style.display = (el.wakeWordToggle && el.wakeWordToggle.checked) ? "flex" : "none";
+        }
+
+        if (listening) {
+          if (isDeepgram && typeof DeepgramSTTService !== "undefined" && DeepgramSTTService.isConnected()) {
+            setBadge(el.sttBadge, el.sttBadgeText, "ok", "Deepgram Live");
+          } else if (isDeepgram && !SecureStorage.has("deepgram")) {
+            setBadge(el.sttBadge, el.sttBadgeText, "warn", "no key");
+          } else {
+            setBadge(el.sttBadge, el.sttBadgeText, "ok", isDeepgram ? "connecting…" : "WebSpeech");
+          }
+        } else {
+          setBadge(el.sttBadge, el.sttBadgeText, "", "mic off");
+        }
+        if (typeof WakeWordManager !== "undefined") {
+          WakeWordManager.updateHUD();
+        }
+      }
+
+      if (el.sttKeySave) {
+        el.sttKeySave.addEventListener("click", () => {
+          const val = el.sttKeyInput.value.trim();
+          if (val) {
+            SecureStorage.set("deepgram", val);
+            refreshSTTUI();
+            showSTTStatus("Deepgram API Key saved.", "ok");
+            if (listening) {
+              stopListening();
+              startListening();
+            }
+          }
+        });
+      }
+      if (el.sttKeyRemove) {
+        el.sttKeyRemove.addEventListener("click", () => {
+          SecureStorage.remove("deepgram");
+          refreshSTTUI();
+          showSTTStatus("Manual key removed. Using .env or fallback.", "info");
+          if (listening) {
+            stopListening();
+            startListening();
+          }
+        });
+      }
+      if (el.sttProviderSelect) {
+        el.sttProviderSelect.addEventListener("change", () => {
+          settings.sttProvider = el.sttProviderSelect.value;
+          saveSettings();
+          refreshSTTUI();
+          if (listening) {
+            stopListening();
+            startListening();
+          }
+        });
+      }
+      if (el.wakeWordToggle) {
+        el.wakeWordToggle.addEventListener("change", () => {
+          settings.wakeWordMode = el.wakeWordToggle.checked;
+          if (el.wakePhraseRow) el.wakePhraseRow.style.display = el.wakeWordToggle.checked ? "flex" : "none";
+          saveSettings();
+          if (typeof WakeWordManager !== "undefined") {
+            WakeWordManager.onPhraseChanged();
+            WakeWordManager.updateHUD();
+          }
+          if (typeof SubtitleManager !== "undefined") {
+            SubtitleManager.updateStandby();
+          }
+        });
+      }
+      if (el.wakePhraseInput) {
+        const handleWakePhraseLive = () => {
+          const val = (el.wakePhraseInput.value || "").trim();
+          settings.wakePhrase = val || "OK Pa";
+          saveSettings();
+          if (typeof WakeWordManager !== "undefined") {
+            WakeWordManager.onPhraseChanged();
+            WakeWordManager.updateHUD();
+          }
+          if (typeof SubtitleManager !== "undefined") {
+            SubtitleManager.updateStandby();
+          }
+        };
+        el.wakePhraseInput.addEventListener("input", handleWakePhraseLive);
+        el.wakePhraseInput.addEventListener("change", handleWakePhraseLive);
+      }
+      if (el.subtitlesToggle) {
+        el.subtitlesToggle.addEventListener("change", () => {
+          settings.subtitlesEnabled = el.subtitlesToggle.checked;
+          saveSettings();
+          if (typeof SubtitleManager !== "undefined") {
+            SubtitleManager.updateStandby();
+          }
+          if (!settings.subtitlesEnabled) {
+            if (el.bubbleYou) el.bubbleYou.classList.remove("show");
+            if (el.bubbleAvatar) el.bubbleAvatar.classList.remove("show");
+          }
+        });
+      }
+      if (el.subtitlesPreviewBtn) {
+        el.subtitlesPreviewBtn.addEventListener("click", () => {
+          if (typeof SubtitleManager !== "undefined") {
+            SubtitleManager.runPreview();
+          }
+        });
+      }
+      if (el.subtitleMicBtn) {
+        el.subtitleMicBtn.addEventListener("click", () => {
+          if (el.micToggle) {
+            el.micToggle.checked = true;
+            settings.micOn = true;
+            saveSettings();
+            startListening();
+            if (typeof SubtitleManager !== "undefined") {
+              SubtitleManager.updateStandby();
+            }
+          }
+        });
+      }
+      if (el.sttTestBtn) {
+        el.sttTestBtn.addEventListener("click", async () => {
+          el.sttTestBtn.disabled = true;
+          el.sttTestBtn.innerHTML = '<span class="spinner"></span> Testing…';
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            stream.getTracks().forEach((t) => t.stop());
+            const key = SecureStorage.get("deepgram");
+            if (el.sttProviderSelect && el.sttProviderSelect.value === "deepgram" && !key) {
+              showSTTStatus("⚠️ Mic works! Enter your Deepgram API key above or in .env to enable live streaming STT.", "err");
+              setBadge(el.sttBadge, el.sttBadgeText, "warn", "mic ok, no key");
+            } else {
+              showSTTStatus("✅ Mic accessible! Say 'OK Pa' into the mic to talk with the Panda.", "ok");
+              setBadge(el.sttBadge, el.sttBadgeText, "ok", "ready");
+            }
+          } catch (err) {
+            showSTTStatus(`❌ Microphone error: ${err.message}`, "err");
+            setBadge(el.sttBadge, el.sttBadgeText, "err", "mic error");
+          } finally {
+            el.sttTestBtn.disabled = false;
+            el.sttTestBtn.textContent = "Test Microphone & STT";
+          }
+        });
+      }
+
+      /* ============================================================================
+   ASK & RESPOND — drives AIService for the reply stream and TTSService for
+   the spoken output. Mood-tag parsing and sentence-chunked speech queuing are
+   unchanged from the original; only the provider calls underneath changed.
+   ========================================================================= */
+      let askGeneration = 0;
+      let currentAskController = null;
+
+      function handleBargeIn() {
+        askGeneration++;
+        if (currentAskController) {
+          try {
+            currentAskController.abort();
+          } catch (e) {}
+          currentAskController = null;
+        }
+        TTSService.cancelAll();
+        isTalking = false;
+        el.dotTalk.classList.remove("live");
+        if (listening) setMicDot("live");
+        if (actions["Idle"]) playAction("Idle");
+        if (typeof WakeWordManager !== "undefined") {
+          WakeWordManager.onResponseFinished();
+        }
+      }
+
+      async function askAndRespond(question) {
+        if (!question || !question.trim()) return;
+        askGeneration++;
+        const myGen = askGeneration;
+        pendingMoodAction = "Idle Talking";
+        if (typeof WakeWordManager !== "undefined") {
+          WakeWordManager.onPromptSubmitted();
+        }
+        showYou(question);
+        showAvatar("…");
+
+        currentAskController = new AbortController();
+        try {
+          const stream = await AIService.generate({
+            question,
+            signal: currentAskController.signal,
+          });
+          let rawFull = "",
+            full = "",
+            buffer = "";
+          let moodState = "pending"; // "pending" -> "tagged" | "heuristic"
+          for await (const delta of stream) {
+            if (myGen !== askGeneration) return; // superseded by a newer question or a barge-in
+            rawFull += delta;
+            let cleanDelta = delta;
+            if (moodState === "pending") {
+              const tagMatch = rawFull.match(MOOD_TAG_RE);
+              if (tagMatch) {
+                applyMoodAnimation(tagMatch[1].toLowerCase());
+                moodState = "tagged";
+                cleanDelta = rawFull.slice(tagMatch[0].length);
+              } else if (rawFull.length < 24) {
+                cleanDelta = "";
+              } else {
+                moodState = "heuristic";
+                cleanDelta = rawFull.slice(full.length);
+              }
+            }
+            full += cleanDelta;
+            buffer += cleanDelta;
+            showAvatar(full);
+            let m;
+            while ((m = buffer.match(/^(.*?[.!?])(\s+|$)/s))) {
+              const sentence = m[1].trim();
+              buffer = buffer.slice(m[0].length);
+              if (sentence) TTSService.enqueue(sentence);
+            }
+          }
+          if (myGen !== askGeneration) return;
+
+          if (moodState === "pending") {
+            const tagMatch = rawFull.match(MOOD_TAG_RE);
+            const released = tagMatch
+              ? rawFull.slice(tagMatch[0].length)
+              : rawFull;
+            full = released;
+            buffer = released;
+            showAvatar(full);
+            moodState = tagMatch ? "tagged" : "heuristic";
+            if (tagMatch) applyMoodAnimation(tagMatch[1].toLowerCase());
+          }
+          if (buffer.trim()) TTSService.enqueue(buffer.trim());
+          if (moodState === "heuristic") applyMoodAnimation(classifyMood(full));
+          if (!full.trim()) showAvatar("(no response)");
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          console.error(err);
+          if (myGen !== askGeneration) return;
+          const msg =
+            err instanceof ProviderError
+              ? err.message
+              : "Hmm, I couldn't come up with an answer just then.";
+          showAvatar("Hmm, I couldn't come up with an answer just then.");
+          showAIError(msg);
+          setBadge(el.aiBadge, el.aiBadgeText, "err", "error");
+        }
+      }
+
+      /* ============================================================================
+   SPEECH RECOGNITION (STT), DEEPGRAM LIVE STREAMING & "OK PA" WAKE-WORD SYSTEM
+   ========================================================================= */
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognizer = null;
+
+      /* ============================================================================
+         WAKE-WORD MANAGER ("OK PA" / HANDS-FREE ASSISTANT STATE MACHINE)
+         ========================================================================= */
+      const WakeWordManager = (() => {
+        // States: 'IDLE_WAITING' | 'HEARING_PROMPT' | 'PROCESSING' | 'REPLYING'
+        let state = 'IDLE_WAITING';
+        let promptBuffer = '';
+        let wakeTriggerTimer = null;
+        let silenceDebounceTimer = null;
+
+        function updateHUD() {
+          if (!el.dotWake || !el.labelWake) return;
+          const wakeWordEnabled = settings.wakeWordMode !== false;
+          if (!wakeWordEnabled) {
+            el.dotWake.className = "dot ready";
+            el.labelWake.textContent = "ALWAYS ON";
+            return;
+          }
+
+          if (state === 'IDLE_WAITING') {
+            el.dotWake.className = "dot wake-wait";
+            el.labelWake.textContent = (settings.wakePhrase || "OK PA").toUpperCase();
+          } else if (state === 'HEARING_PROMPT') {
+            el.dotWake.className = "dot wake-hearing";
+            el.labelWake.textContent = "HEARING PROMPT";
+          } else if (state === 'PROCESSING' || state === 'REPLYING') {
+            el.dotWake.className = "dot wake-processing";
+            el.labelWake.textContent = state === 'PROCESSING' ? "THINKING" : "REPLYING";
+          }
+        }
+
+        function setWakeState(newState) {
+          state = newState;
+          updateHUD();
+        }
+
+        function getWakeRegex() {
+          const raw = (settings.wakePhrase || "OK Pa").trim();
+          // If default or common variations of OK Pa / Okay Pa / OK Panda:
+          if (/^(?:ok|okay|o\.k\.)\s*(?:pa|pah|panda)?$/i.test(raw)) {
+            return /\b(?:ok|okay|o\.k\.|o\s*k)[,.\s\-_]*(?:pa|pah|paa|panda)\b/i;
+          }
+          // For any custom user phrase, split into alphanumeric word tokens
+          const words = raw
+            .split(/[\s,.\-_!?:;'"/\\]+/)
+            .filter(Boolean)
+            .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+          if (words.length === 0) {
+            return /\b(?:ok|okay|o\.k\.|o\s*k)[,.\s\-_]*(?:pa|pah|paa|panda)\b/i;
+          }
+          // Join words with flexible punctuation & whitespace separator
+          return new RegExp(`\\b${words.join("[,.\\s\\-_]+")}\\b`, "i");
+        }
+
+        function matchWakePhrase(rawText) {
+          if (!rawText) return null;
+          const re = getWakeRegex();
+          const match = rawText.match(re);
+          if (match) {
+            const remainder = rawText.slice(match.index + match[0].length).replace(/^[,!?:;.\-_'\s]+/, '').trim();
+            return {
+              matched: true,
+              phrase: match[0],
+              index: match.index,
+              remainder: remainder,
+            };
+          }
+          return null;
+        }
+
+        function onPhraseChanged() {
+          if (state === 'IDLE_WAITING') {
+            promptBuffer = '';
+          }
+          updateHUD();
+          console.log(`[WakeWord] Wake phrase updated live to: "${settings.wakePhrase || 'OK Pa'}"`);
+        }
+
+        function resetToIdle() {
+          clearTimeout(wakeTriggerTimer);
+          clearTimeout(silenceDebounceTimer);
+          promptBuffer = '';
+          setWakeState('IDLE_WAITING');
+        }
+
+        function triggerWakeWord(initialPromptText = '') {
+          setWakeState('HEARING_PROMPT');
+          playAttentiveGesture();
+
+          promptBuffer = (initialPromptText || '').trim();
+          if (promptBuffer) {
+            showYou(promptBuffer, 'wake-recording');
+          } else {
+            showYou("Listening…", 'wake-recording');
+          }
+
+          // Safety timeout: if awakened but no speech arrives within 6 seconds, reset to idle
+          clearTimeout(wakeTriggerTimer);
+          wakeTriggerTimer = setTimeout(() => {
+            if (state === 'HEARING_PROMPT') {
+              console.log('[WakeWord] Prompt timed out after wake phrase.');
+              resetToIdle();
+            }
+          }, 6000);
+        }
+
+        function finalizePrompt() {
+          clearTimeout(wakeTriggerTimer);
+          clearTimeout(silenceDebounceTimer);
+          const finalPrompt = promptBuffer.trim();
+          promptBuffer = '';
+
+          if (!finalPrompt || finalPrompt.length < 2) {
+            resetToIdle();
+            return;
+          }
+
+          setWakeState('PROCESSING');
+          showYou(finalPrompt);
+          console.log(`[WakeWord] Submitting prompt to AI: "${finalPrompt}"`);
+          askAndRespond(finalPrompt);
+        }
+
+        // Called on each transcript result (interim or final) from STT
+        function handleSpeech({ text, isFinal, speechFinal }) {
+          const raw = (text || '').trim();
+          if (!raw) return;
+
+          const wakeWordEnabled = settings.wakeWordMode !== false;
+
+          // Always-on mode (Wake word disabled):
+          if (!wakeWordEnabled) {
+            if (isTalking && raw.length >= 4) {
+              handleBargeIn();
+            }
+            showYou(raw, isFinal ? 'normal' : 'interim');
+            if (isFinal || speechFinal) {
+              fireQuestion(raw);
+            }
+            return;
+          }
+
+          // In Wake-Word mode:
+          // Check for barge-in while AI is talking or replying
+          if (isTalking || state === 'REPLYING' || state === 'PROCESSING') {
+            const wakeMatch = matchWakePhrase(raw);
+            if (wakeMatch) {
+              console.log(`[WakeWord] Barge-in triggered by wake phrase "${wakeMatch.phrase}" during reply!`);
+              handleBargeIn();
+              triggerWakeWord(wakeMatch.remainder);
+              return;
+            }
+            return; // Ignore background talking while AI is active
+          }
+
+          // State 1: IDLE_WAITING for wake word
+          if (state === 'IDLE_WAITING') {
+            const wakeMatch = matchWakePhrase(raw);
+            if (wakeMatch) {
+              console.log(`[WakeWord] Detected wake phrase "${wakeMatch.phrase}" in: "${raw}" (target: "${settings.wakePhrase || 'OK Pa'}")`);
+              triggerWakeWord(wakeMatch.remainder);
+
+              // If the speaker already finished their sentence in one breath:
+              if ((isFinal || speechFinal) && wakeMatch.remainder.length > 2) {
+                clearTimeout(silenceDebounceTimer);
+                silenceDebounceTimer = setTimeout(finalizePrompt, 600);
+              }
+            } else {
+              // Not the wake word: show in live subtitles so streamer sees mic audio activity
+              if (settings.subtitlesEnabled) {
+                showYou(raw, 'interim');
+              }
+            }
+            return;
+          }
+
+          // State 2: HEARING_PROMPT — capturing user's question
+          if (state === 'HEARING_PROMPT') {
+            // Keep safety timeout alive while user speaks
+            clearTimeout(wakeTriggerTimer);
+            wakeTriggerTimer = setTimeout(() => {
+              if (state === 'HEARING_PROMPT') finalizePrompt();
+            }, 3000);
+
+            // Strip wake phrase if user repeated it
+            const re = getWakeRegex();
+            let promptChunk = raw;
+            if (re.test(promptChunk)) {
+              promptChunk = promptChunk.replace(re, '').replace(/^[,!?:;.\-_'\s]+/, '').trim();
+            }
+
+            if (promptChunk) {
+              promptBuffer = promptChunk;
+              showYou(promptBuffer, 'wake-recording');
+            }
+
+            // Smart Stop Detection:
+            // 1. Deepgram speechFinal: speaker naturally paused / finished sentence
+            // 2. Silence debounce timer
+            clearTimeout(silenceDebounceTimer);
+
+            if (speechFinal) {
+              // Deepgram detected speech end
+              silenceDebounceTimer = setTimeout(finalizePrompt, 400);
+            } else if (isFinal) {
+              silenceDebounceTimer = setTimeout(finalizePrompt, 900);
+            } else {
+              // Interim results: 1300ms pause tolerance
+              silenceDebounceTimer = setTimeout(finalizePrompt, 1300);
+            }
+          }
+        }
+
+        function onPromptSubmitted() {
+          setWakeState('PROCESSING');
+        }
+
+        function onResponseStarted() {
+          setWakeState('REPLYING');
+        }
+
+        function onResponseFinished() {
+          const phraseName = settings.wakePhrase || "OK Pa";
+          console.log(`[WakeWord] Panda finished reply. Only hearing again on "${phraseName}".`);
+          resetToIdle();
+        }
+
+        return {
+          getState: () => state,
+          setWakeState,
+          updateHUD,
+          onPhraseChanged,
+          handleSpeech,
+          onPromptSubmitted,
+          onResponseStarted,
+          onResponseFinished,
+          resetToIdle,
+          triggerWakeWord,
+          finalizePrompt,
+        };
+      })();
+
+      /* ============================================================================
+         DEEPGRAM LIVE STREAMING STT SERVICE (WEBSOCKET + OPUS MEDIARECORDER)
+         ========================================================================= */
+      const DeepgramSTTService = (() => {
+        let socket = null;
+        let mediaStream = null;
+        let mediaRecorder = null;
+        let isConnecting = false;
+        let isRunning = false;
+        let reconnectAttempts = 0;
+        const MAX_RECONNECT = 5;
+
+        function getApiKey() {
+          return SecureStorage.get("deepgram") || (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY) || "";
+        }
+
+        async function start({ onSpeech, onError, onStateChange }) {
+          const apiKey = getApiKey().trim();
+          if (!apiKey) {
+            throw new Error("No Deepgram API key configured.");
+          }
+
+          if (isRunning && socket && socket.readyState === WebSocket.OPEN) return;
+          isRunning = true;
+          isConnecting = true;
+          if (onStateChange) onStateChange("connecting");
+
+          try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+              },
+            });
+          } catch (err) {
+            isRunning = false;
+            isConnecting = false;
+            if (onStateChange) onStateChange("error");
+            throw new Error(`Microphone permission error: ${err.message}`);
+          }
+
+          const wsUrl = new URL("wss://api.deepgram.com/v1/listen");
+          wsUrl.searchParams.set("model", "nova-2");
+          wsUrl.searchParams.set("language", "en");
+          wsUrl.searchParams.set("smart_format", "true");
+          wsUrl.searchParams.set("interim_results", "true");
+          wsUrl.searchParams.set("vad_events", "true");
+          wsUrl.searchParams.set("endpointing", "350");
+
+          try {
+            socket = new WebSocket(wsUrl.toString(), ["token", apiKey]);
+          } catch (err) {
+            isRunning = false;
+            isConnecting = false;
+            throw err;
+          }
+
+          socket.onopen = () => {
+            isConnecting = false;
+            reconnectAttempts = 0;
+            console.log("[Deepgram] Live WebSocket connected. Streaming microphone audio...");
+            if (onStateChange) onStateChange("live");
+
+            const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+              ? "audio/webm;codecs=opus"
+              : MediaRecorder.isTypeSupported("audio/webm")
+              ? "audio/webm"
+              : "";
+
+            try {
+              mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
+              mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0 && socket && socket.readyState === WebSocket.OPEN) {
+                  socket.send(e.data);
+                }
+              };
+              mediaRecorder.start(200); // 200ms audio chunks for sub-second subtitle streaming
+            } catch (recErr) {
+              console.error("[Deepgram] MediaRecorder error:", recErr);
+              if (onError) onError(recErr);
+            }
+          };
+
+          socket.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === "Results") {
+                const alt = data.channel?.alternatives?.[0];
+                const text = alt?.transcript || "";
+                const isFinal = !!data.is_final;
+                const speechFinal = !!data.speech_final;
+                if (text.trim() || isFinal || speechFinal) {
+                  onSpeech({ text, isFinal, speechFinal });
+                }
+              } else if (data.type === "UtteranceEnd") {
+                onSpeech({ text: "", isFinal: true, speechFinal: true });
+              }
+            } catch (parseErr) {
+              console.warn("[Deepgram] JSON parse error:", parseErr);
+            }
+          };
+
+          socket.onerror = (event) => {
+            console.warn("[Deepgram] WebSocket error:", event);
+            if (onError) onError(new Error("Deepgram WebSocket error. Check API key and connection."));
+          };
+
+          socket.onclose = (event) => {
+            console.log(`[Deepgram] WebSocket closed (code: ${event.code}).`);
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+              try { mediaRecorder.stop(); } catch (e) {}
+            }
+            if (isRunning && reconnectAttempts < MAX_RECONNECT) {
+              reconnectAttempts++;
+              console.log(`[Deepgram] Reconnecting (${reconnectAttempts}/${MAX_RECONNECT})...`);
+              setTimeout(() => {
+                if (isRunning) start({ onSpeech, onError, onStateChange }).catch(console.error);
+              }, 1200 * reconnectAttempts);
+            } else if (isRunning) {
+              if (onStateChange) onStateChange("off");
+            }
+          };
+        }
+
+        function stop() {
+          isRunning = false;
+          isConnecting = false;
+          reconnectAttempts = 0;
+          if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            try { mediaRecorder.stop(); } catch (e) {}
+            mediaRecorder = null;
+          }
+          if (mediaStream) {
+            mediaStream.getTracks().forEach((t) => t.stop());
+            mediaStream = null;
+          }
+          if (socket) {
+            try { socket.close(); } catch (e) {}
+            socket = null;
+          }
+        }
+
+        return {
+          start,
+          stop,
+          getApiKey,
+          isConnected: () => socket && socket.readyState === WebSocket.OPEN,
+          isRunning: () => isRunning,
+        };
+      })();
+
+      /* ============================================================================
+         START & STOP LISTENING (DEEPGRAM WITH WEBSPEECH FALLBACK)
+         ========================================================================= */
+      let lastFinalText = "", lastFinalAt = 0;
+
+      function fireQuestion(text) {
+        text = (text || "").trim();
+        if (!text) return;
+        const now = Date.now();
+        if (text === lastFinalText && now - lastFinalAt < 1500) return;
+        lastFinalText = text;
+        lastFinalAt = now;
+        askAndRespond(text);
+      }
+
+      function startWebSpeechFallback() {
+        if (!SR) {
+          el.loaderStatus.textContent += "\nSpeech recognition not supported in this browser.";
+          setBadge(el.sttBadge, el.sttBadgeText, "warn", "unsupported");
+          return;
+        }
+        if (recognizer) {
+          try { recognizer.stop(); } catch (e) {}
+        }
+        recognizer = new SR();
+        recognizer.continuous = true;
+        recognizer.interimResults = true;
+        recognizer.lang = navigator.language || "en-US";
+        recognizer.onresult = (e) => {
+          let finalText = "", interimText = "";
+          for (let i = e.resultIndex; i < e.results.length; i++) {
+            const r = e.results[i];
+            if (r.isFinal) finalText += r[0].transcript;
+            else interimText += r[0].transcript;
+          }
+          if (finalText.trim()) {
+            WakeWordManager.handleSpeech({ text: finalText, isFinal: true, speechFinal: true });
+          } else if (interimText.trim()) {
+            WakeWordManager.handleSpeech({ text: interimText, isFinal: false, speechFinal: false });
+          }
+        };
+        recognizer.onerror = (e) => {
+          console.warn("[WebSpeech] Error:", e.error);
+          if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+            listening = false;
+            setMicDot("warn");
+            setBadge(el.sttBadge, el.sttBadgeText, "err", "mic denied");
+          }
+        };
+        recognizer.onend = () => {
+          if (!listening) {
+            setMicDot("off");
+            return;
+          }
+          if (!DeepgramSTTService.isConnected()) {
+            try { recognizer.start(); } catch (e) {}
+          }
+        };
+        try { recognizer.start(); } catch (e) {}
+        setBadge(el.sttBadge, el.sttBadgeText, "ok", "WebSpeech");
+        setMicDot(isTalking ? "warn" : "live");
+      }
+
+      async function startListening() {
+        listening = true;
+        setMicDot("warn");
+        WakeWordManager.updateHUD();
+
+        const provider = settings.sttProvider || "deepgram";
+        const hasDeepgramKey = !!(SecureStorage.get("deepgram") || (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY));
+
+        if (provider === "deepgram" && hasDeepgramKey) {
+          try {
+            await DeepgramSTTService.start({
+              onSpeech: (speech) => {
+                WakeWordManager.handleSpeech(speech);
+              },
+              onError: (err) => {
+                console.warn("[STT] Deepgram error:", err.message);
+                showSTTStatus(err.message, "err");
+                if (SR && !recognizer) {
+                  console.log("[STT] Falling back to Web Speech API...");
+                  startWebSpeechFallback();
+                }
+              },
+              onStateChange: (state) => {
+                if (state === "live") {
+                  setMicDot(isTalking ? "warn" : "live");
+                  setBadge(el.sttBadge, el.sttBadgeText, "ok", "Deepgram Live");
+                } else if (state === "connecting") {
+                  setBadge(el.sttBadge, el.sttBadgeText, "warn", "connecting…");
+                } else if (state === "error") {
+                  setMicDot("warn");
+                  setBadge(el.sttBadge, el.sttBadgeText, "err", "error");
+                } else {
+                  setMicDot("off");
+                }
+                if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
+              },
+            });
+            return;
+          } catch (err) {
+            console.warn("[STT] Deepgram initialization failed, falling back to WebSpeech:", err.message);
+            showSTTStatus(err.message, "err");
+          }
+        }
+
+        // Fallback to Web Speech API
+        startWebSpeechFallback();
+      }
+
+      function stopListening() {
+        listening = false;
+        DeepgramSTTService.stop();
+        if (recognizer) {
+          try { recognizer.stop(); } catch (e) {}
+          recognizer = null;
+        }
+        WakeWordManager.resetToIdle();
+        setMicDot("off");
+        setBadge(el.sttBadge, el.sttBadgeText, "", "mic off");
+        if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
+      }
+
+      refreshSTTUI();
+
+      el.micToggle.addEventListener("change", () => {
+        if (el.micToggle.checked) startListening();
+        else stopListening();
+        saveSettings();
+        if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
+      });
+      if (settings.micOn) startListening();
+      if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
+
+      el.textFallbackToggle.addEventListener("change", () => {
+        el.textFallbackWrap.classList.toggle(
+          "show",
+          el.textFallbackToggle.checked,
+        );
+        saveSettings();
+      });
+      el.textInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && el.textInput.value.trim()) {
+          askAndRespond(el.textInput.value.trim());
+          el.textInput.value = "";
+        }
+      });
+    </script>
+  </body>
+</html>
