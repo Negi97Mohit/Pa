@@ -571,14 +571,22 @@
         transform: translateX(-50%);
         bottom: 24px;
         z-index: 30;
-        width: min(860px, 92vw);
+        width: min(860px, 94vw);
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 8px;
         pointer-events: auto;
         font-family: var(--sans);
-        transition: opacity 0.25s ease, transform 0.25s ease;
+        touch-action: none;
+      }
+      #captions.custom-positioned {
+        bottom: auto !important;
+        transform: none !important;
+      }
+      #captions.is-dragging {
+        cursor: grabbing !important;
+        user-select: none !important;
       }
       #captions.hidden {
         display: none !important;
@@ -586,36 +594,191 @@
       .subtitle-bar {
         width: 100%;
         box-sizing: border-box;
-        background: rgba(13, 17, 24, 0.92);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 16px;
-        padding: 12px 18px;
+        padding: 10px 14px;
         display: flex;
         align-items: center;
-        gap: 12px;
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.2);
+        gap: 10px;
+        position: relative;
+        user-select: none;
         transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
       }
-      .subtitle-bar.mode-mic-off {
-        border-color: rgba(255, 93, 93, 0.45);
-        background: rgba(26, 15, 18, 0.94);
+
+      /* Drag & Resize Handles */
+      .subtitle-drag-handle {
+        cursor: grab;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 15px;
+        line-height: 1;
+        padding: 4px 3px;
+        border-radius: 4px;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s ease, background 0.15s ease;
+        flex-shrink: 0;
+      }
+      .subtitle-drag-handle:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .subtitle-drag-handle:active {
+        cursor: grabbing;
+      }
+
+      .subtitle-resize-handle {
+        cursor: nwse-resize;
+        color: rgba(255, 255, 255, 0.35);
+        font-size: 13px;
+        line-height: 1;
+        padding: 3px 2px;
+        margin-left: 2px;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.15s ease;
+        flex-shrink: 0;
+      }
+      .subtitle-resize-handle:hover {
+        color: #fff;
+      }
+
+      /* --- SUBTITLE THEMES (Transparent & Translucent Backdrops) --- */
+
+      /* 1. Clean Frosted Glass (Default) */
+      .subtitle-bar.theme-glass {
+        background: rgba(13, 17, 24, 0.72);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.2);
+        color: #f0f3f6;
+      }
+
+      /* 2. Cyberpunk Neon */
+      .subtitle-bar.theme-cyber {
+        background: rgba(10, 14, 28, 0.65);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(0, 243, 255, 0.55);
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.28), 0 12px 36px rgba(0, 0, 0, 0.65);
+        color: #e6f9ff;
+      }
+      .subtitle-bar.theme-cyber .subtitle-content {
+        text-shadow: 0 0 8px rgba(0, 243, 255, 0.35);
+      }
+      .subtitle-bar.theme-cyber .pill-standby {
+        background: rgba(0, 243, 255, 0.15);
+        color: #00f3ff;
+        border-color: rgba(0, 243, 255, 0.45);
+      }
+      .subtitle-bar.theme-cyber .pill-avatar {
+        background: rgba(255, 0, 128, 0.22);
+        color: #ff52a5;
+        border-color: rgba(255, 0, 128, 0.55);
+      }
+
+      /* 3. Golden Co-Star */
+      .subtitle-bar.theme-amber {
+        background: rgba(22, 17, 10, 0.7);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(245, 166, 35, 0.55);
+        box-shadow: 0 0 22px rgba(245, 166, 35, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6);
+        color: #fff6e5;
+      }
+      .subtitle-bar.theme-amber .subtitle-content .avatar-highlight {
+        color: #ffd88a;
+      }
+
+      /* 4. Twitch Violet Neon */
+      .subtitle-bar.theme-purple {
+        background: rgba(18, 12, 32, 0.68);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(169, 112, 255, 0.6);
+        box-shadow: 0 0 22px rgba(169, 112, 255, 0.32), 0 12px 36px rgba(0, 0, 0, 0.65);
+        color: #f7efff;
+      }
+      .subtitle-bar.theme-purple .subtitle-content {
+        text-shadow: 0 0 7px rgba(169, 112, 255, 0.35);
+      }
+      .subtitle-bar.theme-purple .pill-avatar {
+        background: rgba(169, 112, 255, 0.25);
+        color: #d1a8ff;
+        border-color: rgba(169, 112, 255, 0.6);
+      }
+
+      /* 5. Matrix Emerald */
+      .subtitle-bar.theme-emerald {
+        background: rgba(8, 20, 13, 0.72);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(0, 255, 136, 0.5);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.22), 0 12px 36px rgba(0, 0, 0, 0.65);
+        color: #d8ffec;
+      }
+      .subtitle-bar.theme-emerald .subtitle-content {
+        font-family: var(--mono);
+        text-shadow: 0 0 6px rgba(0, 255, 136, 0.35);
+      }
+      .subtitle-bar.theme-emerald .pill-avatar {
+        background: rgba(0, 255, 136, 0.18);
+        color: #46d38a;
+        border-color: rgba(0, 255, 136, 0.45);
+      }
+
+      /* 6. Pastel Sakura */
+      .subtitle-bar.theme-sakura {
+        background: rgba(28, 15, 23, 0.68);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 140, 185, 0.55);
+        box-shadow: 0 0 20px rgba(255, 140, 185, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6);
+        color: #fff0f5;
+      }
+      .subtitle-bar.theme-sakura .pill-avatar {
+        background: rgba(255, 140, 185, 0.22);
+        color: #ffadc9;
+        border-color: rgba(255, 140, 185, 0.55);
+      }
+
+      /* 7. Pure Ghost (Zero Background for gaming/streaming) */
+      .subtitle-bar.theme-ghost {
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #ffffff;
+      }
+      .subtitle-bar.theme-ghost .subtitle-content {
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 3px 8px rgba(0,0,0,0.9);
+        font-weight: 600;
+      }
+      .subtitle-bar.theme-ghost .subtitle-drag-handle,
+      .subtitle-bar.theme-ghost .subtitle-resize-handle {
+        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+      }
+
+      /* User Prompt Modes ALWAYS override themes to clearly indicate active recording */
+      .subtitle-bar.mode-wake-recording {
+        border-color: rgba(255, 180, 50, 0.95) !important;
+        box-shadow: 0 0 26px rgba(255, 180, 50, 0.4), 0 12px 36px rgba(0, 0, 0, 0.6) !important;
+        background: rgba(28, 22, 12, 0.88) !important;
+        backdrop-filter: blur(14px) !important;
       }
       .subtitle-bar.mode-interim {
-        border-color: rgba(70, 211, 138, 0.65);
-        box-shadow: 0 0 20px rgba(70, 211, 138, 0.25), 0 12px 36px rgba(0, 0, 0, 0.55);
+        border-color: rgba(70, 211, 138, 0.75) !important;
+        box-shadow: 0 0 20px rgba(70, 211, 138, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6) !important;
       }
-      .subtitle-bar.mode-wake-recording {
-        border-color: rgba(255, 180, 50, 0.9);
-        box-shadow: 0 0 24px rgba(255, 180, 50, 0.35), 0 12px 36px rgba(0, 0, 0, 0.55);
-        background: rgba(28, 22, 12, 0.94);
+      .subtitle-bar.mode-mic-off {
+        border-color: rgba(255, 93, 93, 0.5) !important;
+        background: rgba(28, 14, 17, 0.88) !important;
       }
-      .subtitle-bar.mode-avatar {
-        border-color: rgba(245, 166, 35, 0.85);
-        box-shadow: 0 0 24px rgba(245, 166, 35, 0.3), 0 12px 36px rgba(0, 0, 0, 0.55);
-        background: rgba(24, 20, 14, 0.94);
-      }
+
       .subtitle-pill {
         display: inline-flex;
         align-items: center;
@@ -663,10 +826,11 @@
       .subtitle-content {
         flex: 1;
         min-width: 0;
-        font-size: 15.5px;
+        font-size: var(--subtitle-font-size, 16px);
         line-height: 1.45;
-        color: #f0f3f6;
         word-break: break-word;
+        transition: font-size 0.15s ease;
+        user-select: text;
       }
       .subtitle-content.standby-hint {
         color: #8b949e;
@@ -935,9 +1099,32 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           <label style="min-width: auto">Text fallback box</label>
           <label class="switch"><input type="checkbox" id="textFallbackToggle" checked /><span class="slider-tog"></span></label>
         </div>
+        <div class="row" style="margin-top: 10px;">
+          <label>Subtitle Theme</label>
+          <select id="subtitleThemeSelect">
+            <option value="glass">Clean Frosted Glass</option>
+            <option value="cyber">Cyberpunk Neon</option>
+            <option value="amber">Golden Co-Star</option>
+            <option value="purple">Twitch Purple</option>
+            <option value="emerald">Matrix Emerald</option>
+            <option value="sakura">Pastel Sakura</option>
+            <option value="ghost">Pure Ghost (Zero Background)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Font Size</label>
+          <input type="range" id="subtitleFontSizeRange" min="12" max="28" step="1" value="16" />
+          <span class="val" id="subtitleFontSizeVal">16px</span>
+        </div>
+        <div class="row">
+          <label>Subtitle Width</label>
+          <input type="range" id="subtitleWidthRange" min="340" max="1100" step="10" value="860" />
+          <span class="val" id="subtitleWidthVal">860px</span>
+        </div>
         <div class="btnrow" style="margin-top: 8px">
-          <button class="pill" id="sttTestBtn">Test Microphone & STT</button>
+          <button class="pill" id="sttTestBtn">Test Mic & STT</button>
           <button class="pill" id="subtitlesPreviewBtn">👁️ Preview Subtitles</button>
+          <button class="pill secondary" id="subtitleResetLayoutBtn" title="Snap subtitles back to bottom-center">Reset Layout</button>
         </div>
         <div id="sttStatusNote" class="note" style="margin-top: 6px;">
           Deepgram streams audio via WebSockets with sub-second real-time interim subtitles.
@@ -1169,7 +1356,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
     </div>
 
     <div id="captions">
-      <div class="subtitle-bar" id="subtitleBar">
+      <div class="subtitle-bar theme-glass" id="subtitleBar">
+        <div class="subtitle-drag-handle" id="subtitleDragHandle" title="Drag to reposition subtitles anywhere (double-click to reset)">⠿</div>
         <div class="subtitle-pill pill-standby" id="subtitlePill">🎙️ Live STT</div>
         <div class="subtitle-content standby-hint" id="subtitleContent">
           Waiting for wake phrase. Say <strong class="wake-highlight">"OK Pa"</strong> to talk to Panda!
@@ -1178,6 +1366,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           <button id="subtitleMicBtn" class="subtitle-btn" style="display:none;" title="Turn on microphone">🎙️ Turn On Mic</button>
           <span class="subtitle-badge" id="subtitleBadge">DEEPGRAM LIVE 🟢</span>
         </div>
+        <div class="subtitle-resize-handle" id="subtitleResizeHandle" title="Drag to resize width">⤡</div>
       </div>
       <!-- Hidden legacy elements for compatibility -->
       <div style="display:none;" id="bubbleYou"><span id="tagYou"></span><span id="textYou"></span></div>
@@ -1228,6 +1417,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         wakeWordMode: true,
         wakePhrase: "OK Pa",
         subtitlesEnabled: true,
+        subtitleTheme: "glass",
+        subtitleFontSize: 16,
+        subtitleWidth: 860,
+        subtitlePos: null,
         voiceSettings: {
           stability: 0.45,
           similarity: 0.85,
@@ -1249,6 +1442,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (!s.wakePhrase) s.wakePhrase = "OK Pa";
           if (s.wakeWordMode === undefined) s.wakeWordMode = true;
           if (s.subtitlesEnabled === undefined) s.subtitlesEnabled = true;
+          if (!s.subtitleTheme) s.subtitleTheme = "glass";
+          if (!s.subtitleFontSize) s.subtitleFontSize = 16;
+          if (!s.subtitleWidth) s.subtitleWidth = 860;
           if (!s.sttProvider) s.sttProvider = "deepgram";
           if (s.aiProvider === "gemini-local" && typeof SecureStorage !== "undefined" && SecureStorage.has("openrouter")) {
             s.aiProvider = "openrouter";
@@ -1283,11 +1479,19 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           wakeWordMode: el.wakeWordToggle ? el.wakeWordToggle.checked : (settings.wakeWordMode !== false),
           wakePhrase: el.wakePhraseInput ? (el.wakePhraseInput.value.trim() || "OK Pa") : (settings.wakePhrase || "OK Pa"),
           subtitlesEnabled: el.subtitlesToggle ? el.subtitlesToggle.checked : (settings.subtitlesEnabled !== false),
+          subtitleTheme: el.subtitleThemeSelect ? el.subtitleThemeSelect.value : (settings.subtitleTheme || "glass"),
+          subtitleFontSize: el.subtitleFontSizeRange ? parseInt(el.subtitleFontSizeRange.value, 10) : (settings.subtitleFontSize || 16),
+          subtitleWidth: settings.subtitleWidth || 860,
+          subtitlePos: settings.subtitlePos || null,
         };
         settings.sttProvider = s.sttProvider;
         settings.wakeWordMode = s.wakeWordMode;
         settings.wakePhrase = s.wakePhrase;
         settings.subtitlesEnabled = s.subtitlesEnabled;
+        settings.subtitleTheme = s.subtitleTheme;
+        settings.subtitleFontSize = s.subtitleFontSize;
+        settings.subtitleWidth = s.subtitleWidth;
+        settings.subtitlePos = s.subtitlePos;
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
       }
 
@@ -1548,6 +1752,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         labelWake: document.getElementById("labelWake"),
         captions: document.getElementById("captions"),
         subtitleBar: document.getElementById("subtitleBar"),
+        subtitleDragHandle: document.getElementById("subtitleDragHandle"),
+        subtitleResizeHandle: document.getElementById("subtitleResizeHandle"),
         subtitlePill: document.getElementById("subtitlePill"),
         subtitleContent: document.getElementById("subtitleContent"),
         subtitleMicBtn: document.getElementById("subtitleMicBtn"),
@@ -1626,6 +1832,12 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         wakePhraseRow: document.getElementById("wakePhraseRow"),
         wakePhraseInput: document.getElementById("wakePhraseInput"),
         subtitlesToggle: document.getElementById("subtitlesToggle"),
+        subtitleThemeSelect: document.getElementById("subtitleThemeSelect"),
+        subtitleFontSizeRange: document.getElementById("subtitleFontSizeRange"),
+        subtitleFontSizeVal: document.getElementById("subtitleFontSizeVal"),
+        subtitleWidthRange: document.getElementById("subtitleWidthRange"),
+        subtitleWidthVal: document.getElementById("subtitleWidthVal"),
+        subtitleResetLayoutBtn: document.getElementById("subtitleResetLayoutBtn"),
         subtitlesPreviewBtn: document.getElementById("subtitlesPreviewBtn"),
         sttTestBtn: document.getElementById("sttTestBtn"),
         sttStatusNote: document.getElementById("sttStatusNote"),
@@ -1670,6 +1882,16 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       if (el.wakePhraseRow) el.wakePhraseRow.style.display = (settings.wakeWordMode !== false) ? "flex" : "none";
       if (el.wakePhraseInput) el.wakePhraseInput.value = settings.wakePhrase || "OK Pa";
       if (el.subtitlesToggle) el.subtitlesToggle.checked = settings.subtitlesEnabled !== false;
+      if (el.subtitleThemeSelect) el.subtitleThemeSelect.value = settings.subtitleTheme || "glass";
+      if (el.subtitleFontSizeRange) {
+        el.subtitleFontSizeRange.value = settings.subtitleFontSize || 16;
+        if (el.subtitleFontSizeVal) el.subtitleFontSizeVal.textContent = `${settings.subtitleFontSize || 16}px`;
+      }
+      if (el.subtitleWidthRange) {
+        el.subtitleWidthRange.value = settings.subtitleWidth || 860;
+        if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = `${settings.subtitleWidth || 860}px`;
+      }
+      document.documentElement.style.setProperty('--subtitle-font-size', `${settings.subtitleFontSize || 16}px`);
 
       /* generic slider <-> label wiring, shared by framing + voice-setting sliders */
       function wireSlider(range, out, digits, onChange) {
@@ -2265,7 +2487,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
         function render({ pillClass, pillText, textHtml, isStandby, barClass, showMicBtn, badgeText }) {
           if (el.subtitleBar) {
-            el.subtitleBar.className = `subtitle-bar ${barClass || ''}`;
+            const activeTheme = settings.subtitleTheme || 'glass';
+            el.subtitleBar.className = `subtitle-bar theme-${activeTheme} ${barClass || ''}`;
           }
           if (el.subtitlePill) {
             el.subtitlePill.className = `subtitle-pill ${pillClass || ''}`;
@@ -2283,11 +2506,175 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           }
         }
 
+        function applyTheme(theme) {
+          settings.subtitleTheme = theme;
+          if (el.subtitleBar) {
+            const classes = el.subtitleBar.className.split(' ').filter(c => !c.startsWith('theme-'));
+            classes.push(`theme-${theme}`);
+            el.subtitleBar.className = classes.join(' ');
+          }
+        }
+
         return {
           updateStandby,
           showUserSpeech,
           showAvatarSpeech,
           runPreview,
+          applyTheme,
+        };
+      })();
+
+      const subtitleDraggable = (() => {
+        let isDragging = false;
+        let isResizing = false;
+        let startX = 0, startY = 0;
+        let initialLeft = 0, initialTop = 0;
+        let initialWidth = 0;
+
+        function applyLayout() {
+          if (!el.captions) return;
+          const width = settings.subtitleWidth || 860;
+          el.captions.style.width = `min(${width}px, 94vw)`;
+
+          if (settings.subtitlePos && typeof settings.subtitlePos.x === 'number' && typeof settings.subtitlePos.y === 'number') {
+            el.captions.classList.add("custom-positioned");
+            el.captions.style.left = `${settings.subtitlePos.x}px`;
+            el.captions.style.top = `${settings.subtitlePos.y}px`;
+            el.captions.style.bottom = "auto";
+            el.captions.style.transform = "none";
+          } else {
+            el.captions.classList.remove("custom-positioned");
+            el.captions.style.left = "50%";
+            el.captions.style.top = "";
+            el.captions.style.bottom = "24px";
+            el.captions.style.transform = "translateX(-50%)";
+          }
+
+          document.documentElement.style.setProperty('--subtitle-font-size', `${settings.subtitleFontSize || 16}px`);
+        }
+
+        const onDragStart = (e) => {
+          if (e.target.closest('button, input, select, .subtitle-resize-handle, .subtitle-actions')) return;
+          isDragging = true;
+          if (el.captions) el.captions.classList.add("is-dragging");
+
+          const rect = el.captions.getBoundingClientRect();
+          initialLeft = rect.left;
+          initialTop = rect.top;
+          startX = e.clientX;
+          startY = e.clientY;
+
+          el.captions.classList.add("custom-positioned");
+          el.captions.style.left = `${initialLeft}px`;
+          el.captions.style.top = `${initialTop}px`;
+          el.captions.style.bottom = "auto";
+          el.captions.style.transform = "none";
+
+          window.addEventListener('pointermove', onDragMove);
+          window.addEventListener('pointerup', onDragEnd);
+        };
+
+        const onDragMove = (e) => {
+          if (!isDragging || !el.captions) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+
+          let newLeft = initialLeft + dx;
+          let newTop = initialTop + dy;
+
+          const rect = el.captions.getBoundingClientRect();
+          const maxX = window.innerWidth - rect.width - 8;
+          const maxY = window.innerHeight - rect.height - 8;
+
+          newLeft = Math.max(8, Math.min(newLeft, maxX));
+          newTop = Math.max(8, Math.min(newTop, maxY));
+
+          el.captions.style.left = `${newLeft}px`;
+          el.captions.style.top = `${newTop}px`;
+        };
+
+        const onDragEnd = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          if (el.captions) el.captions.classList.remove("is-dragging");
+          window.removeEventListener('pointermove', onDragMove);
+          window.removeEventListener('pointerup', onDragEnd);
+
+          if (el.captions) {
+            const rect = el.captions.getBoundingClientRect();
+            settings.subtitlePos = { x: Math.round(rect.left), y: Math.round(rect.top) };
+            saveSettings();
+          }
+        };
+
+        if (el.subtitleDragHandle) {
+          el.subtitleDragHandle.addEventListener('pointerdown', onDragStart);
+          el.subtitleDragHandle.addEventListener('dblclick', () => {
+            resetSubtitleLayout();
+          });
+        }
+        if (el.subtitleBar) {
+          el.subtitleBar.addEventListener('pointerdown', (e) => {
+            if (e.target === el.subtitleBar || e.target.classList.contains('subtitle-content') || e.target.classList.contains('subtitle-drag-handle')) {
+              onDragStart(e);
+            }
+          });
+        }
+
+        if (el.subtitleResizeHandle) {
+          el.subtitleResizeHandle.addEventListener('pointerdown', (e) => {
+            e.stopPropagation();
+            isResizing = true;
+            startX = e.clientX;
+            const rect = el.captions.getBoundingClientRect();
+            initialWidth = rect.width;
+
+            window.addEventListener('pointermove', onResizeMove);
+            window.addEventListener('pointerup', onResizeEnd);
+          });
+        }
+
+        const onResizeMove = (e) => {
+          if (!isResizing || !el.captions) return;
+          const dx = e.clientX - startX;
+          let newWidth = Math.max(340, Math.min(initialWidth + dx, window.innerWidth - 20));
+          el.captions.style.width = `${newWidth}px`;
+          if (el.subtitleWidthRange) {
+            el.subtitleWidthRange.value = newWidth;
+            if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = `${newWidth}px`;
+          }
+        };
+
+        const onResizeEnd = () => {
+          if (!isResizing) return;
+          isResizing = false;
+          window.removeEventListener('pointermove', onResizeMove);
+          window.removeEventListener('pointerup', onResizeEnd);
+
+          if (el.captions) {
+            const rect = el.captions.getBoundingClientRect();
+            settings.subtitleWidth = Math.round(rect.width);
+            saveSettings();
+          }
+        };
+
+        function resetSubtitleLayout() {
+          settings.subtitlePos = null;
+          settings.subtitleWidth = 860;
+          saveSettings();
+          applyLayout();
+          if (el.subtitleWidthRange) {
+            el.subtitleWidthRange.value = 860;
+            if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = "860px";
+          }
+        }
+
+        // Apply immediately on startup
+        applyLayout();
+
+        return {
+          applyLayout,
+          resetSubtitleLayout,
         };
       })();
 
@@ -4123,6 +4510,41 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             if (typeof SubtitleManager !== "undefined") {
               SubtitleManager.updateStandby();
             }
+          }
+        });
+      }
+      if (el.subtitleThemeSelect) {
+        el.subtitleThemeSelect.addEventListener("change", () => {
+          settings.subtitleTheme = el.subtitleThemeSelect.value;
+          saveSettings();
+          if (typeof SubtitleManager !== "undefined") {
+            SubtitleManager.applyTheme(settings.subtitleTheme);
+            SubtitleManager.updateStandby();
+          }
+        });
+      }
+      if (el.subtitleFontSizeRange) {
+        el.subtitleFontSizeRange.addEventListener("input", () => {
+          const val = parseInt(el.subtitleFontSizeRange.value, 10) || 16;
+          settings.subtitleFontSize = val;
+          if (el.subtitleFontSizeVal) el.subtitleFontSizeVal.textContent = `${val}px`;
+          document.documentElement.style.setProperty('--subtitle-font-size', `${val}px`);
+          saveSettings();
+        });
+      }
+      if (el.subtitleWidthRange) {
+        el.subtitleWidthRange.addEventListener("input", () => {
+          const val = parseInt(el.subtitleWidthRange.value, 10) || 860;
+          settings.subtitleWidth = val;
+          if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = `${val}px`;
+          if (el.captions) el.captions.style.width = `min(${val}px, 94vw)`;
+          saveSettings();
+        });
+      }
+      if (el.subtitleResetLayoutBtn) {
+        el.subtitleResetLayoutBtn.addEventListener("click", () => {
+          if (typeof subtitleDraggable !== "undefined") {
+            subtitleDraggable.resetSubtitleLayout();
           }
         });
       }
