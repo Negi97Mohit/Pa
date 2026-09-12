@@ -1,7 +1,7 @@
 ﻿# 🐼 Pa: Real-Time 3D AI Co-Star & Voice Companion
 
 <p align="center">
-  <img src="Pa&me.png" alt="Mohit and Pa" width="420" style="border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.4);" />
+  <img src="Pa.png" alt="Mohit and Pa" width="420" style="border-radius: 16px; box-shadow: 0 12px 36px rgba(0,0,0,0.4);" />
 </p>
 
 <p align="center">
