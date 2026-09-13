@@ -133,9 +133,7 @@
         border-radius: 10px;
         cursor: pointer;
         box-shadow: 0 8px 24px rgba(245, 166, 35, 0.35);
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
         display: block;
         width: 100%;
         margin-bottom: 10px;
@@ -218,25 +216,12 @@
         box-shadow: 0 0 8px 2px rgba(155, 81, 224, 0.75);
       }
       @keyframes hudPulse {
-        0%,
-        100% {
-          opacity: 0.5;
-          transform: scale(0.9);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1.15);
-        }
+        0%, 100% { opacity: 0.5; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.15); }
       }
       @keyframes hudFastPulse {
-        from {
-          transform: scale(1);
-          opacity: 0.85;
-        }
-        to {
-          transform: scale(1.25);
-          opacity: 1;
-        }
+        from { transform: scale(1); opacity: 0.85; }
+        to { transform: scale(1.25); opacity: 1; }
       }
       #hud span.label {
         letter-spacing: 0.04em;
@@ -640,10 +625,7 @@
         gap: 10px;
         position: relative;
         user-select: none;
-        transition:
-          border-color 0.25s ease,
-          box-shadow 0.25s ease,
-          background 0.25s ease;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
       }
 
       /* Drag & Resize Handles */
@@ -658,9 +640,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition:
-          color 0.15s ease,
-          background 0.15s ease;
+        transition: color 0.15s ease, background 0.15s ease;
         flex-shrink: 0;
       }
       .subtitle-drag-handle:hover {
@@ -697,9 +677,7 @@
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border: 1px solid rgba(255, 255, 255, 0.14);
-        box-shadow:
-          0 12px 36px rgba(0, 0, 0, 0.5),
-          0 0 0 1px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.2);
         color: #f0f3f6;
       }
 
@@ -709,9 +687,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(0, 243, 255, 0.55);
-        box-shadow:
-          0 0 20px rgba(0, 243, 255, 0.28),
-          0 12px 36px rgba(0, 0, 0, 0.65);
+        box-shadow: 0 0 20px rgba(0, 243, 255, 0.28), 0 12px 36px rgba(0, 0, 0, 0.65);
         color: #e6f9ff;
       }
       .subtitle-bar.theme-cyber .subtitle-content {
@@ -734,9 +710,7 @@
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border: 1px solid rgba(245, 166, 35, 0.55);
-        box-shadow:
-          0 0 22px rgba(245, 166, 35, 0.25),
-          0 12px 36px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 22px rgba(245, 166, 35, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6);
         color: #fff6e5;
       }
       .subtitle-bar.theme-amber .subtitle-content .avatar-highlight {
@@ -749,9 +723,7 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(169, 112, 255, 0.6);
-        box-shadow:
-          0 0 22px rgba(169, 112, 255, 0.32),
-          0 12px 36px rgba(0, 0, 0, 0.65);
+        box-shadow: 0 0 22px rgba(169, 112, 255, 0.32), 0 12px 36px rgba(0, 0, 0, 0.65);
         color: #f7efff;
       }
       .subtitle-bar.theme-purple .subtitle-content {
@@ -769,9 +741,7 @@
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border: 1px solid rgba(0, 255, 136, 0.5);
-        box-shadow:
-          0 0 20px rgba(0, 255, 136, 0.22),
-          0 12px 36px rgba(0, 0, 0, 0.65);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.22), 0 12px 36px rgba(0, 0, 0, 0.65);
         color: #d8ffec;
       }
       .subtitle-bar.theme-emerald .subtitle-content {
@@ -790,9 +760,7 @@
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
         border: 1px solid rgba(255, 140, 185, 0.55);
-        box-shadow:
-          0 0 20px rgba(255, 140, 185, 0.25),
-          0 12px 36px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 20px rgba(255, 140, 185, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6);
         color: #fff0f5;
       }
       .subtitle-bar.theme-sakura .pill-avatar {
@@ -811,33 +779,24 @@
         color: #ffffff;
       }
       .subtitle-bar.theme-ghost .subtitle-content {
-        text-shadow:
-          -1px -1px 0 #000,
-          1px -1px 0 #000,
-          -1px 1px 0 #000,
-          1px 1px 0 #000,
-          0 3px 8px rgba(0, 0, 0, 0.9);
+        text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 3px 8px rgba(0,0,0,0.9);
         font-weight: 600;
       }
       .subtitle-bar.theme-ghost .subtitle-drag-handle,
       .subtitle-bar.theme-ghost .subtitle-resize-handle {
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.9);
       }
 
       /* User Prompt Modes ALWAYS override themes to clearly indicate active recording */
       .subtitle-bar.mode-wake-recording {
         border-color: rgba(255, 180, 50, 0.95) !important;
-        box-shadow:
-          0 0 26px rgba(255, 180, 50, 0.4),
-          0 12px 36px rgba(0, 0, 0, 0.6) !important;
+        box-shadow: 0 0 26px rgba(255, 180, 50, 0.4), 0 12px 36px rgba(0, 0, 0, 0.6) !important;
         background: rgba(28, 22, 12, 0.88) !important;
         backdrop-filter: blur(14px) !important;
       }
       .subtitle-bar.mode-interim {
         border-color: rgba(70, 211, 138, 0.75) !important;
-        box-shadow:
-          0 0 20px rgba(70, 211, 138, 0.25),
-          0 12px 36px rgba(0, 0, 0, 0.6) !important;
+        box-shadow: 0 0 20px rgba(70, 211, 138, 0.25), 0 12px 36px rgba(0, 0, 0, 0.6) !important;
       }
       .subtitle-bar.mode-mic-off {
         border-color: rgba(255, 93, 93, 0.5) !important;
@@ -875,13 +834,8 @@
         animation: pulseWake 1.2s infinite ease-in-out;
       }
       @keyframes pulseWake {
-        0%,
-        100% {
-          box-shadow: 0 0 6px rgba(255, 180, 50, 0.3);
-        }
-        50% {
-          box-shadow: 0 0 14px rgba(255, 180, 50, 0.7);
-        }
+        0%, 100% { box-shadow: 0 0 6px rgba(255, 180, 50, 0.3); }
+        50% { box-shadow: 0 0 14px rgba(255, 180, 50, 0.7); }
       }
       .subtitle-pill.pill-avatar {
         background: rgba(245, 166, 35, 0.25);
@@ -928,9 +882,7 @@
         padding: 6px 12px;
         border-radius: 7px;
         cursor: pointer;
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
         box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
       }
       .subtitle-btn:hover {
@@ -983,7 +935,7 @@
       }
       .bubble .caption-text {
         vertical-align: middle;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+        text-shadow: 0 1px 3px rgba(0,0,0,0.85);
       }
       .bubble.you {
         align-self: flex-end;
@@ -998,15 +950,11 @@
       }
       .bubble.you.live-interim {
         border-color: rgba(70, 211, 138, 0.6);
-        box-shadow:
-          0 0 16px rgba(70, 211, 138, 0.25),
-          0 8px 24px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 16px rgba(70, 211, 138, 0.25), 0 8px 24px rgba(0,0,0,0.4);
       }
       .bubble.you.wake-recording {
         border-color: rgba(255, 180, 50, 0.85);
-        box-shadow:
-          0 0 20px rgba(255, 180, 50, 0.4),
-          0 8px 24px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 20px rgba(255, 180, 50, 0.4), 0 8px 24px rgba(0,0,0,0.4);
       }
       .bubble.you.wake-recording .speaker-tag {
         background: rgba(255, 170, 0, 0.3);
@@ -1073,31 +1021,12 @@
 
     <div id="camPrompt">
       <div class="promptCard">
-        <h3
-          style="
-            margin: 0 0 8px;
-            color: var(--text);
-            font-size: 18px;
-            font-weight: 700;
-          "
-        >
-          🎥 Co-Star Camera
-        </h3>
-        <p
-          style="
-            margin: 0 0 16px;
-            font-size: 13px;
-            color: var(--text-dim);
-            line-height: 1.45;
-          "
-        >
-          Click to let your co-host join you on camera, or skip to use the 3D
-          Panda without camera.
+        <h3 style="margin: 0 0 8px; color: var(--text); font-size: 18px; font-weight: 700;">🎥 Co-Star Camera</h3>
+        <p style="margin: 0 0 16px; font-size: 13px; color: var(--text-dim); line-height: 1.45;">
+          Click to let your co-host join you on camera, or skip to use the 3D Panda without camera.
         </p>
         <button id="camPromptBtn" class="primary">🎥 Enable Camera</button>
-        <button id="camPromptSkip" class="secondary" type="button">
-          Skip (Panda Only)
-        </button>
+        <button id="camPromptSkip" class="secondary" type="button">Skip (Panda Only)</button>
       </div>
     </div>
 
@@ -1158,87 +1087,45 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       <div class="section" id="sttSection">
         <h3>
           <span>Speech Recognition (STT)</span>
-          <span class="badge" id="sttBadge"
-            ><span class="bdot"></span
-            ><span id="sttBadgeText">checking…</span></span
-          >
+          <span class="badge" id="sttBadge"><span class="bdot"></span><span id="sttBadgeText">checking…</span></span>
         </h3>
         <div class="toggle row">
           <label style="min-width: auto">Microphone enabled</label>
-          <label class="switch"
-            ><input type="checkbox" id="micToggle" /><span
-              class="slider-tog"
-            ></span
-          ></label>
+          <label class="switch"><input type="checkbox" id="micToggle" /><span class="slider-tog"></span></label>
         </div>
         <div class="row">
           <label>STT Provider</label>
           <select id="sttProviderSelect">
-            <option value="deepgram">
-              Deepgram (Live Streaming - Fast & Reliable)
-            </option>
+            <option value="deepgram">Deepgram (Live Streaming - Fast & Reliable)</option>
             <option value="webspeech">Browser Web Speech API (Fallback)</option>
           </select>
         </div>
         <div id="sttKeyRow" class="keyrow">
-          <input
-            type="password"
-            id="sttKeyInput"
-            placeholder="Deepgram API Key"
-          />
+          <input type="password" id="sttKeyInput" placeholder="Deepgram API Key" />
           <button class="pill" id="sttKeySave">Save</button>
           <button class="pill danger" id="sttKeyRemove">Remove</button>
         </div>
-        <div
-          id="sttKeySource"
-          class="note"
-          style="
-            display: none;
-            margin-top: 2px;
-            font-size: 11px;
-            color: var(--text-dim);
-          "
-        ></div>
+        <div id="sttKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
 
-        <div class="toggle row" style="margin-top: 10px">
+        <div class="toggle row" style="margin-top: 10px;">
           <label style="min-width: auto">Wake-Word Mode ("OK Pa")</label>
-          <label class="switch"
-            ><input type="checkbox" id="wakeWordToggle" checked /><span
-              class="slider-tog"
-            ></span
-          ></label>
+          <label class="switch"><input type="checkbox" id="wakeWordToggle" checked /><span class="slider-tog"></span></label>
         </div>
         <div class="row" id="wakePhraseRow">
           <label>Wake Phrase</label>
-          <input
-            type="text"
-            id="wakePhraseInput"
-            value="OK Pa"
-            placeholder="e.g. OK Pa"
-          />
+          <input type="text" id="wakePhraseInput" value="OK Pa" placeholder="e.g. OK Pa" />
         </div>
-        <small class="hint"
-          >Panda only listens and replies when you say this phrase, like Siri or
-          OK Google.</small
-        >
+        <small class="hint">Panda only listens and replies when you say this phrase, like Siri or OK Google.</small>
 
-        <div class="toggle row" style="margin-top: 10px">
+        <div class="toggle row" style="margin-top: 10px;">
           <label style="min-width: auto">Live Subtitles</label>
-          <label class="switch"
-            ><input type="checkbox" id="subtitlesToggle" checked /><span
-              class="slider-tog"
-            ></span
-          ></label>
+          <label class="switch"><input type="checkbox" id="subtitlesToggle" checked /><span class="slider-tog"></span></label>
         </div>
         <div class="toggle row">
           <label style="min-width: auto">Text fallback box</label>
-          <label class="switch"
-            ><input type="checkbox" id="textFallbackToggle" checked /><span
-              class="slider-tog"
-            ></span
-          ></label>
+          <label class="switch"><input type="checkbox" id="textFallbackToggle" checked /><span class="slider-tog"></span></label>
         </div>
-        <div class="row" style="margin-top: 10px">
+        <div class="row" style="margin-top: 10px;">
           <label>Subtitle Theme</label>
           <select id="subtitleThemeSelect">
             <option value="glass">Clean Frosted Glass</option>
@@ -1252,44 +1139,21 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         </div>
         <div class="row">
           <label>Font Size</label>
-          <input
-            type="range"
-            id="subtitleFontSizeRange"
-            min="12"
-            max="28"
-            step="1"
-            value="16"
-          />
+          <input type="range" id="subtitleFontSizeRange" min="12" max="28" step="1" value="16" />
           <span class="val" id="subtitleFontSizeVal">16px</span>
         </div>
         <div class="row">
           <label>Subtitle Width</label>
-          <input
-            type="range"
-            id="subtitleWidthRange"
-            min="340"
-            max="1100"
-            step="10"
-            value="860"
-          />
+          <input type="range" id="subtitleWidthRange" min="340" max="1100" step="10" value="860" />
           <span class="val" id="subtitleWidthVal">860px</span>
         </div>
         <div class="btnrow" style="margin-top: 8px">
           <button class="pill" id="sttTestBtn">Test Mic & STT</button>
-          <button class="pill" id="subtitlesPreviewBtn">
-            👁️ Preview Subtitles
-          </button>
-          <button
-            class="pill secondary"
-            id="subtitleResetLayoutBtn"
-            title="Snap subtitles back to bottom-center"
-          >
-            Reset Layout
-          </button>
+          <button class="pill" id="subtitlesPreviewBtn">👁️ Preview Subtitles</button>
+          <button class="pill secondary" id="subtitleResetLayoutBtn" title="Snap subtitles back to bottom-center">Reset Layout</button>
         </div>
-        <div id="sttStatusNote" class="note" style="margin-top: 6px">
-          Deepgram streams audio via WebSockets with sub-second real-time
-          interim subtitles.
+        <div id="sttStatusNote" class="note" style="margin-top: 6px;">
+          Deepgram streams audio via WebSockets with sub-second real-time interim subtitles.
         </div>
       </div>
 
@@ -1309,25 +1173,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           <input type="password" id="aiKeyInput" placeholder="Paste API key" />
           <button class="pill" id="aiKeySave">Save</button>
           <button class="pill danger" id="aiKeyRemove">Remove</button>
-          <button
-            class="pill"
-            id="aiKeyToggle"
-            title="Switch between new ↔ old .env key"
-            style="display: none"
-          >
-            ⇄ Old
-          </button>
+          <button class="pill" id="aiKeyToggle" title="Switch between new ↔ old .env key" style="display:none">⇄ Old</button>
         </div>
-        <div
-          id="aiKeySource"
-          class="note"
-          style="
-            display: none;
-            margin-top: 2px;
-            font-size: 11px;
-            color: var(--text-dim);
-          "
-        ></div>
+        <div id="aiKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
         <div class="row" id="aiModelRow">
           <label>Model</label>
           <select id="aiModelSelect"></select>
@@ -1362,25 +1210,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           <input type="password" id="ttsKeyInput" placeholder="Paste API key" />
           <button class="pill" id="ttsKeySave">Save</button>
           <button class="pill danger" id="ttsKeyRemove">Remove</button>
-          <button
-            class="pill"
-            id="ttsKeyToggle"
-            title="Switch between new ↔ old .env key"
-            style="display: none"
-          >
-            ⇄ Old
-          </button>
+          <button class="pill" id="ttsKeyToggle" title="Switch between new ↔ old .env key" style="display:none">⇄ Old</button>
         </div>
-        <div
-          id="ttsKeySource"
-          class="note"
-          style="
-            display: none;
-            margin-top: 2px;
-            font-size: 11px;
-            color: var(--text-dim);
-          "
-        ></div>
+        <div id="ttsKeySource" class="note" style="display:none; margin-top:2px; font-size:11px; color: var(--text-dim);"></div>
         <div class="row" id="ttsModelRow">
           <label>Model</label>
           <select id="ttsModelSelect"></select>
@@ -1553,8 +1385,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           ></label>
         </div>
         <div class="note">
-          Off = fast bbox-position heuristic. On = a real per-pixel depth model
-          (Depth-Anything, downloads ~50-100MB once, cached after).
+          Off = fast bbox-position heuristic. On = a real per-pixel depth
+          model (Depth-Anything, downloads ~50-100MB once, cached after).
         </div>
         <div class="row" style="margin-top: 10px">
           <label>Performance</label>
@@ -1565,9 +1397,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           </select>
         </div>
         <div class="note">
-          Controls how often the heavy depth/segmentation models run. "Auto"
-          watches your live fps and backs off on its own — only switch this if
-          Auto is guessing wrong for your machine.
+          Controls how often the heavy depth/segmentation models run.
+          "Auto" watches your live fps and backs off on its own — only
+          switch this if Auto is guessing wrong for your machine.
         </div>
         <div class="toggle row" style="margin-top: 10px">
           <label style="min-width: auto">Person cutout (segmentation)</label>
@@ -1598,9 +1430,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         </div>
         <div class="note">
           "Avatar depth" is how far back {avatar} sits (0 = right against the
-          lens, 1 = far wall). Whenever you're estimated to be nearer than this,
-          the real you cuts in front of {avatar} instead of {avatar} floating on
-          top of you. Needs both toggles above turned on.
+          lens, 1 = far wall). Whenever you're estimated to be nearer than
+          this, the real you cuts in front of {avatar} instead of {avatar}
+          floating on top of you. Needs both toggles above turned on.
         </div>
         <div class="toggle row" style="margin-top: 10px">
           <label style="min-width: auto">Auto-scale to match you</label>
@@ -1622,16 +1454,16 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           /><span class="val" id="autoScaleRefVal">0.55</span>
         </div>
         <div class="note">
-          Lower = {avatar} shrinks/grows less per step you take toward/away from
-          the camera (matches a person who fills less of the frame at your
-          normal distance). Higher = more aggressive scaling. Stand at your
-          usual streaming distance and nudge this until {avatar}'s size feels
-          right next to you.
+          Lower = {avatar} shrinks/grows less per step you take toward/away
+          from the camera (matches a person who fills less of the frame at
+          your normal distance). Higher = more aggressive scaling. Stand at
+          your usual streaming distance and nudge this until {avatar}'s size
+          feels right next to you.
         </div>
         <div class="note">
-          When on, {avatar} resizes and nudges sideways to sit next to you at a
-          matching apparent size as you move closer/farther/side to side. Works
-          from the same object detection above (no extra model).
+          When on, {avatar} resizes and nudges sideways to sit next to you at
+          a matching apparent size as you move closer/farther/side to side.
+          Works from the same object detection above (no extra model).
         </div>
         <div id="occlusionStatus" class="note">Occlusion is off.</div>
       </div>
@@ -1662,48 +1494,20 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
     <div id="captions">
       <div class="subtitle-bar theme-glass" id="subtitleBar">
-        <div
-          class="subtitle-drag-handle"
-          id="subtitleDragHandle"
-          title="Drag to reposition subtitles anywhere (double-click to reset)"
-        >
-          ⠿
-        </div>
-        <div class="subtitle-pill pill-standby" id="subtitlePill">
-          🎙️ Live STT
-        </div>
+        <div class="subtitle-drag-handle" id="subtitleDragHandle" title="Drag to reposition subtitles anywhere (double-click to reset)">⠿</div>
+        <div class="subtitle-pill pill-standby" id="subtitlePill">🎙️ Live STT</div>
         <div class="subtitle-content standby-hint" id="subtitleContent">
-          Waiting for wake phrase. Say
-          <strong class="wake-highlight">"OK Pa"</strong> to talk to Panda!
+          Waiting for wake phrase. Say <strong class="wake-highlight">"OK Pa"</strong> to talk to Panda!
         </div>
         <div class="subtitle-actions">
-          <button
-            id="subtitleMicBtn"
-            class="subtitle-btn"
-            style="display: none"
-            title="Turn on microphone"
-          >
-            🎙️ Turn On Mic
-          </button>
-          <span class="subtitle-badge" id="subtitleBadge"
-            >DEEPGRAM LIVE 🟢</span
-          >
+          <button id="subtitleMicBtn" class="subtitle-btn" style="display:none;" title="Turn on microphone">🎙️ Turn On Mic</button>
+          <span class="subtitle-badge" id="subtitleBadge">DEEPGRAM LIVE 🟢</span>
         </div>
-        <div
-          class="subtitle-resize-handle"
-          id="subtitleResizeHandle"
-          title="Drag to resize width"
-        >
-          ⤡
-        </div>
+        <div class="subtitle-resize-handle" id="subtitleResizeHandle" title="Drag to resize width">⤡</div>
       </div>
       <!-- Hidden legacy elements for compatibility -->
-      <div style="display: none" id="bubbleYou">
-        <span id="tagYou"></span><span id="textYou"></span>
-      </div>
-      <div style="display: none" id="bubbleAvatar">
-        <span id="tagAvatar"></span><span id="textAvatar"></span>
-      </div>
+      <div style="display:none;" id="bubbleYou"><span id="tagYou"></span><span id="textYou"></span></div>
+      <div style="display:none;" id="bubbleAvatar"><span id="tagAvatar"></span><span id="textAvatar"></span></div>
     </div>
 
     <!-- Load API keys from env.js (synced from .env by server.js or edited manually) -->
@@ -1789,11 +1593,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (!s.subtitleFontSize) s.subtitleFontSize = 16;
           if (!s.subtitleWidth) s.subtitleWidth = 860;
           if (!s.sttProvider) s.sttProvider = "deepgram";
-          if (
-            s.aiProvider === "gemini-local" &&
-            typeof SecureStorage !== "undefined" &&
-            SecureStorage.has("openrouter")
-          ) {
+          if (s.aiProvider === "gemini-local" && typeof SecureStorage !== "undefined" && SecureStorage.has("openrouter")) {
             s.aiProvider = "openrouter";
           }
           return s;
@@ -1815,15 +1615,15 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           frame: currentFrame,
           bg: currentBg,
           camOn: el.camToggle.checked,
-          visionOn: el.visionToggle.checked,
-          visionShowBoxes: el.visionBoxToggle.checked,
-          perfMode: el.perfModeSelect.value,
-          realDepthOn: el.realDepthToggle.checked,
-          segmentationOn: el.segmentationToggle.checked,
-          occlusionOn: el.occlusionToggle.checked,
-          avatarDepth: parseFloat(el.avatarDepthRange.value),
-          autoScaleOn: el.autoScaleToggle.checked,
-          autoScaleRefHeight: parseFloat(el.autoScaleRefRange.value),
+        visionOn: el.visionToggle.checked,
+        visionShowBoxes: el.visionBoxToggle.checked,
+        perfMode: el.perfModeSelect.value,
+        realDepthOn: el.realDepthToggle.checked,
+        segmentationOn: el.segmentationToggle.checked,
+        occlusionOn: el.occlusionToggle.checked,
+        avatarDepth: parseFloat(el.avatarDepthRange.value),
+        autoScaleOn: el.autoScaleToggle.checked,
+        autoScaleRefHeight: parseFloat(el.autoScaleRefRange.value),
           camMirror: el.camMirrorToggle.checked,
           aiProvider: settings.aiProvider,
           aiModel: settings.aiModel,
@@ -1831,24 +1631,12 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           ttsModel: settings.ttsModel,
           ttsVoice: settings.ttsVoice,
           voiceSettings: settings.voiceSettings,
-          sttProvider: el.sttProviderSelect
-            ? el.sttProviderSelect.value
-            : settings.sttProvider || "deepgram",
-          wakeWordMode: el.wakeWordToggle
-            ? el.wakeWordToggle.checked
-            : settings.wakeWordMode !== false,
-          wakePhrase: el.wakePhraseInput
-            ? el.wakePhraseInput.value.trim() || "OK Pa"
-            : settings.wakePhrase || "OK Pa",
-          subtitlesEnabled: el.subtitlesToggle
-            ? el.subtitlesToggle.checked
-            : settings.subtitlesEnabled !== false,
-          subtitleTheme: el.subtitleThemeSelect
-            ? el.subtitleThemeSelect.value
-            : settings.subtitleTheme || "glass",
-          subtitleFontSize: el.subtitleFontSizeRange
-            ? parseInt(el.subtitleFontSizeRange.value, 10)
-            : settings.subtitleFontSize || 16,
+          sttProvider: el.sttProviderSelect ? el.sttProviderSelect.value : (settings.sttProvider || "deepgram"),
+          wakeWordMode: el.wakeWordToggle ? el.wakeWordToggle.checked : (settings.wakeWordMode !== false),
+          wakePhrase: el.wakePhraseInput ? (el.wakePhraseInput.value.trim() || "OK Pa") : (settings.wakePhrase || "OK Pa"),
+          subtitlesEnabled: el.subtitlesToggle ? el.subtitlesToggle.checked : (settings.subtitlesEnabled !== false),
+          subtitleTheme: el.subtitleThemeSelect ? el.subtitleThemeSelect.value : (settings.subtitleTheme || "glass"),
+          subtitleFontSize: el.subtitleFontSizeRange ? parseInt(el.subtitleFontSizeRange.value, 10) : (settings.subtitleFontSize || 16),
           subtitleWidth: settings.subtitleWidth || 860,
           subtitlePos: settings.subtitlePos || null,
         };
@@ -1943,19 +1731,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
       /* Map provider id → ENV_CONFIG field names */
       const ENV_KEY_MAP = {
-        openrouter: {
-          newKey: "OPENROUTER_API_KEY",
-          oldKey: "OPENROUTER_OLD_API_KEY",
-        },
-        elevenlabs: {
-          newKey: "ELEVENLABS_API_KEY",
-          oldKey: "ELEVENLABS_OLD_API_KEY",
-        },
-        noiz: { newKey: "NOIZ_API_KEY", oldKey: "NOIZ_OLD_API_KEY" },
-        deepgram: {
-          newKey: "DEEPGRAM_API_KEY",
-          oldKey: "DEEPGRAM_OLD_API_KEY",
-        },
+        openrouter:  { newKey: "OPENROUTER_API_KEY",  oldKey: "OPENROUTER_OLD_API_KEY" },
+        elevenlabs:  { newKey: "ELEVENLABS_API_KEY",  oldKey: "ELEVENLABS_OLD_API_KEY" },
+        noiz:        { newKey: "NOIZ_API_KEY",        oldKey: "NOIZ_OLD_API_KEY" },
+        deepgram:    { newKey: "DEEPGRAM_API_KEY",    oldKey: "DEEPGRAM_OLD_API_KEY" },
       };
 
       const SecureStorage = {
@@ -1998,9 +1777,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           const map = ENV_KEY_MAP[provider];
           if (!map) {
             // Fallback for unmapped providers: try generic API_KEY / OLD_API_KEY
-            return slot === "old" ? cfg.OLD_API_KEY || "" : cfg.API_KEY || "";
+            return slot === "old" ? (cfg.OLD_API_KEY || "") : (cfg.API_KEY || "");
           }
-          return slot === "old" ? cfg[map.oldKey] || "" : cfg[map.newKey] || "";
+          return slot === "old" ? (cfg[map.oldKey] || "") : (cfg[map.newKey] || "");
         },
 
         /* Check whether a given .env slot has a key */
@@ -2090,7 +1869,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (otherKey) {
             this.setSlot(provider, otherSlot);
             console.warn(
-              `[SecureStorage] ${provider}: ${currentSlot} key failed → switching to ${otherSlot} key`,
+              `[SecureStorage] ${provider}: ${currentSlot} key failed → switching to ${otherSlot} key`
             );
             return true;
           }
@@ -2229,9 +2008,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         subtitleFontSizeVal: document.getElementById("subtitleFontSizeVal"),
         subtitleWidthRange: document.getElementById("subtitleWidthRange"),
         subtitleWidthVal: document.getElementById("subtitleWidthVal"),
-        subtitleResetLayoutBtn: document.getElementById(
-          "subtitleResetLayoutBtn",
-        ),
+        subtitleResetLayoutBtn: document.getElementById("subtitleResetLayoutBtn"),
         subtitlesPreviewBtn: document.getElementById("subtitlesPreviewBtn"),
         sttTestBtn: document.getElementById("sttTestBtn"),
         sttStatusNote: document.getElementById("sttStatusNote"),
@@ -2244,13 +2021,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         if (!el.dotMic) return;
         el.dotMic.className =
           "dot" +
-          (state === "live"
-            ? " live"
-            : state === "warn"
-              ? " warn"
-              : state === "ready"
-                ? " ready"
-                : "");
+          (state === "live" ? " live" : state === "warn" ? " warn" : state === "ready" ? " ready" : "");
       }
 
       let modelRoot = null;
@@ -2267,10 +2038,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       el.personaPrompt.value = settings.personaPrompt || "";
       el.micToggle.checked = !!settings.micOn;
       el.textFallbackToggle.checked = settings.textFallback !== false;
-      el.textFallbackWrap.classList.toggle(
-        "show",
-        settings.textFallback !== false,
-      );
+      el.textFallbackWrap.classList.toggle("show", settings.textFallback !== false);
       el.scaleRange.value = settings.scale ?? 1;
       el.scaleVal.textContent = (settings.scale ?? 1).toFixed(2);
       el.xRange.value = settings.x ?? 0;
@@ -2290,31 +2058,20 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       el.autoScaleToggle.checked = !!settings.autoScaleOn;
       el.autoScaleRefRange.value = settings.autoScaleRefHeight ?? 0.55;
       el.selfCamVideo.classList.toggle("mirror", !!settings.camMirror);
-      if (el.wakeWordToggle)
-        el.wakeWordToggle.checked = settings.wakeWordMode !== false;
-      if (el.wakePhraseRow)
-        el.wakePhraseRow.style.display =
-          settings.wakeWordMode !== false ? "flex" : "none";
-      if (el.wakePhraseInput)
-        el.wakePhraseInput.value = settings.wakePhrase || "OK Pa";
-      if (el.subtitlesToggle)
-        el.subtitlesToggle.checked = settings.subtitlesEnabled !== false;
-      if (el.subtitleThemeSelect)
-        el.subtitleThemeSelect.value = settings.subtitleTheme || "glass";
+      if (el.wakeWordToggle) el.wakeWordToggle.checked = settings.wakeWordMode !== false;
+      if (el.wakePhraseRow) el.wakePhraseRow.style.display = (settings.wakeWordMode !== false) ? "flex" : "none";
+      if (el.wakePhraseInput) el.wakePhraseInput.value = settings.wakePhrase || "OK Pa";
+      if (el.subtitlesToggle) el.subtitlesToggle.checked = settings.subtitlesEnabled !== false;
+      if (el.subtitleThemeSelect) el.subtitleThemeSelect.value = settings.subtitleTheme || "glass";
       if (el.subtitleFontSizeRange) {
         el.subtitleFontSizeRange.value = settings.subtitleFontSize || 16;
-        if (el.subtitleFontSizeVal)
-          el.subtitleFontSizeVal.textContent = `${settings.subtitleFontSize || 16}px`;
+        if (el.subtitleFontSizeVal) el.subtitleFontSizeVal.textContent = `${settings.subtitleFontSize || 16}px`;
       }
       if (el.subtitleWidthRange) {
         el.subtitleWidthRange.value = settings.subtitleWidth || 860;
-        if (el.subtitleWidthVal)
-          el.subtitleWidthVal.textContent = `${settings.subtitleWidth || 860}px`;
+        if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = `${settings.subtitleWidth || 860}px`;
       }
-      document.documentElement.style.setProperty(
-        "--subtitle-font-size",
-        `${settings.subtitleFontSize || 16}px`,
-      );
+      document.documentElement.style.setProperty('--subtitle-font-size', `${settings.subtitleFontSize || 16}px`);
 
       /* generic slider <-> label wiring, shared by framing + voice-setting sliders */
       function wireSlider(range, out, digits, onChange) {
@@ -2540,6 +2297,23 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       const AUTO_SCALE_MIN = 0.4;
       const AUTO_SCALE_MAX = 2.2;
       const AUTO_OFFSET_MAX = 1.2; // clamp in slider-x units so avatar can't fly off-frame
+      // Margin kept inside the camera's actual visible frustum (see the
+      // clamp in applyTransformFromSliders below) so the avatar never
+      // touches the literal edge of frame, even at full auto-scale/offset.
+      const FRAME_SAFE_MARGIN = 0.92;
+
+      /* ----------------------------------------------------------------------
+         Voice-triggered presence ("welcome panda" / "goodbye panda").
+         The avatar starts hidden and only appears on the summon phrase, then
+         hides again on the dismiss phrase — driven from WakeWordManager's
+         transcript hook below. Animated as a scale-in/out (0..1 multiplier,
+         same lerp-toward-target pattern as auto-scale) rather than an
+         instant show/hide, so it reads as an intentional entrance/exit
+         instead of a pop.
+         ---------------------------------------------------------------- */
+      let summonScale = 0; // current, smoothed — 0 = fully hidden, 1 = fully shown
+      let summonScaleTarget = 0;
+      let avatarSummoned = false;
 
       function updateAutoScaleTargets() {
         if (!el.autoScaleToggle.checked) {
@@ -2574,17 +2348,85 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
       function applyTransformFromSliders() {
         if (!modelRoot) return;
-        const s = parseFloat(el.scaleRange.value) * autoScaleMultiplier;
+        const s = parseFloat(el.scaleRange.value) * autoScaleMultiplier * summonScale;
         modelRoot.scale.setScalar(s);
-        modelRoot.position.x =
+
+        const rawX =
           (parseFloat(el.xRange.value) + autoOffsetXNorm) *
           (modelBounds.size.x || 0.6);
-        modelRoot.position.y =
+        const rawY =
           parseFloat(el.yRange.value) * (modelBounds.size.y || 1.7) * 0.5;
+
+        // Keep-in-frame clamp: auto-scale's "sit beside you" offset (and, in
+        // principle, a heavy-handed manual slider) can otherwise push the
+        // avatar partway or fully out of the camera's view. Compute the
+        // camera's actual visible half-width/half-height at the avatar's
+        // depth and clamp position so its (scaled) footprint always stays
+        // inside that, with a small safety margin. Camera looks straight
+        // down -Z at the same height it sits at (see applyFraming's
+        // lookAt), so the frustum's vertical center in world space is
+        // exactly camera.position.y.
+        const dist = Math.max(0.01, camera.position.z - modelRoot.position.z);
+        const vFov = THREE.MathUtils.degToRad(camera.fov);
+        const visibleHalfH = Math.tan(vFov / 2) * dist * FRAME_SAFE_MARGIN;
+        const visibleHalfW = visibleHalfH * camera.aspect;
+
+        const halfW = ((modelBounds.size.x || 0.6) / 2) * s;
+        const modelH = (modelBounds.size.y || 1.7) * s; // model spans local y=[0, size.y*s]
+
+        const maxX = Math.max(0, visibleHalfW - halfW);
+        const minY = camera.position.y - visibleHalfH; // lower bound: feet stay above frustum bottom
+        const maxY = camera.position.y + visibleHalfH - modelH; // upper bound: head stays below frustum top
+
+        modelRoot.position.x = THREE.MathUtils.clamp(rawX, -maxX, maxX);
+        modelRoot.position.y = THREE.MathUtils.clamp(rawY, minY, Math.max(minY, maxY));
         modelRoot.rotation.y = THREE.MathUtils.degToRad(
           parseFloat(el.rotRange.value),
         );
+
+        modelRoot.visible = summonScale > 0.001;
       }
+
+      /* ----------------------------------------------------------------------
+         AvatarPresence — "welcome panda" / "goodbye panda" voice control.
+         Wired into WakeWordManager.handleSpeech() below, which sees every
+         interim/final transcript chunk regardless of wake-word mode. Only
+         acts on finalized speech (interim results still have words changing
+         mid-utterance and would false-trigger constantly otherwise).
+         summon()/dismiss() just set a target; the actual scale-in/out is
+         lerped in the render loop the same way auto-scale already is, so it
+         reads as an entrance/exit rather than a pop.
+         ---------------------------------------------------------------- */
+      const AvatarPresence = (() => {
+        function summon() {
+          if (avatarSummoned) return;
+          avatarSummoned = true;
+          summonScaleTarget = 1;
+          if (modelRoot) modelRoot.visible = true; // visible immediately so the scale-in animates in, rather than popping in at the end
+          showAvatarSpeech("🐼 Panda's here!");
+          console.log('[AvatarPresence] Summoned by voice.');
+        }
+        function dismiss() {
+          if (!avatarSummoned) return;
+          avatarSummoned = false;
+          summonScaleTarget = 0;
+          showAvatarSpeech("👋 See you later!");
+          console.log('[AvatarPresence] Dismissed by voice.');
+        }
+        return { summon, dismiss, isSummoned: () => avatarSummoned };
+      })();
+
+      function buildPhraseRegex(phrase) {
+        const words = phrase
+          .trim()
+          .split(/[\s,.\-_!?:;'"/\\]+/)
+          .filter(Boolean)
+          .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+        if (!words.length) return null;
+        return new RegExp(`\\b${words.join("[,.\\s\\-_]+")}\\b`, "i");
+      }
+      const SUMMON_PHRASE_RE = buildPhraseRegex("welcome panda");
+      const DISMISS_PHRASE_RE = buildPhraseRegex("goodbye panda");
 
       let idleTimer = null;
       function scheduleIdleVariation() {
@@ -2653,7 +2495,6 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         useSegmentation: !!settings.segmentationOn,
         perfMode: settings.perfMode || "auto",
       });
-      window.visionSystem = visionSystem; // TEMP: for console debugging, remove later
       visionSystem.setShowBoxes(el.visionBoxToggle.checked);
 
       /* ----------------------------------------------------------------------
@@ -2677,10 +2518,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       }
 
       function updateOcclusion() {
-        if (
-          !el.occlusionToggle.checked ||
-          !el.selfCam.classList.contains("active")
-        ) {
+        if (!el.occlusionToggle.checked || !el.selfCam.classList.contains("active")) {
           clearOcclusion();
           return;
         }
@@ -2735,8 +2573,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         el.visionStatus.innerHTML =
           '<span style="color:var(--ok)">Detecting people/objects — colors show estimated depth (red = near, green = far).</span>';
         if (el.realDepthToggle.checked) visionSystem.setRealDepthEnabled(true);
-        if (el.segmentationToggle.checked)
-          visionSystem.setSegmentationEnabled(true);
+        if (el.segmentationToggle.checked) visionSystem.setSegmentationEnabled(true);
       }
       function stopVision() {
         visionSystem.stop();
@@ -2806,9 +2643,13 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         // framing doesn't jitter with per-frame detection noise.
         updateAutoScaleTargets();
         const lerpSpeed = Math.min(1, dt * 4);
-        autoScaleMultiplier +=
-          (autoScaleTarget - autoScaleMultiplier) * lerpSpeed;
+        autoScaleMultiplier += (autoScaleTarget - autoScaleMultiplier) * lerpSpeed;
         autoOffsetXNorm += (autoOffsetXTarget - autoOffsetXNorm) * lerpSpeed;
+        // Summon/dismiss animates a bit snappier than auto-scale's framing
+        // chase — it's a deliberate entrance/exit, not noise smoothing.
+        const summonLerpSpeed = Math.min(1, dt * 6);
+        summonScale += (summonScaleTarget - summonScale) * summonLerpSpeed;
+        if (summonScaleTarget === 0 && summonScale < 0.001) summonScale = 0;
         applyTransformFromSliders();
         renderer.render(scene, camera);
         // Occlusion compositing (item 3) — cheap (two drawImage calls), safe
@@ -2914,7 +2755,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             t &&
             t.closest &&
             t.closest(
-              "#panel, #gearBtn, #hud, #textFallback, #camPrompt, #captions, .subtitle-bar, #selfCam, .bubble",
+              "#panel, #gearBtn, #hud, #textFallback, #camPrompt, #captions, .subtitle-bar, #selfCam, .bubble"
             )
           );
         }
@@ -3037,34 +2878,26 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
               isStandby: false,
               barClass: "mode-mic-off",
               showMicBtn: true,
-              badgeText: "STT PAUSED",
+              badgeText: "STT PAUSED"
             });
             return;
           }
 
           const wakePhrase = settings.wakePhrase || "OK Pa";
-          const isDeepgram =
-            (settings.sttProvider || "deepgram") === "deepgram";
-          const isDgLive =
-            isDeepgram &&
-            typeof DeepgramSTTService !== "undefined" &&
-            DeepgramSTTService.isConnected();
-          const providerLabel = isDgLive
-            ? "DEEPGRAM LIVE 🟢"
-            : isDeepgram
-              ? "DEEPGRAM 🟡"
-              : "WEBSPEECH 🟢";
+          const isDeepgram = (settings.sttProvider || "deepgram") === "deepgram";
+          const isDgLive = isDeepgram && typeof DeepgramSTTService !== "undefined" && DeepgramSTTService.isConnected();
+          const providerLabel = isDgLive ? "DEEPGRAM LIVE 🟢" : (isDeepgram ? "DEEPGRAM 🟡" : "WEBSPEECH 🟢");
 
           render({
             pillClass: "pill-standby",
             pillText: "🎙️ Live STT",
-            textHtml: settings.wakeWordMode
+            textHtml: settings.wakeWordMode 
               ? `Waiting for wake phrase. Say <strong class="wake-highlight">"${escapeHtml(wakePhrase)}"</strong> to talk to Panda!`
               : `Listening continuously. Speak anytime!`,
             isStandby: true,
             barClass: "",
             showMicBtn: false,
-            badgeText: providerLabel,
+            badgeText: providerLabel
           });
         }
 
@@ -3077,25 +2910,17 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           const isInterim = mode === "interim";
 
           const pillClass = isWake ? "pill-wake" : "pill-you";
-          const pillText = isWake
-            ? "🐼 Hearing Prompt"
-            : isInterim
-              ? "🎙️ Live Hearing"
-              : "🎙️ You";
-          const barClass = isWake
-            ? "mode-wake-recording"
-            : isInterim
-              ? "mode-interim"
-              : "";
+          const pillText = isWake ? "🐼 Hearing Prompt" : (isInterim ? "🎙️ Live Hearing" : "🎙️ You");
+          const barClass = isWake ? "mode-wake-recording" : (isInterim ? "mode-interim" : "");
 
           render({
             pillClass,
             pillText,
-            textHtml: `<span class="${isWake ? "wake-highlight" : ""}">${escapeHtml(text)}</span>`,
+            textHtml: `<span class="${isWake ? 'wake-highlight' : ''}">${escapeHtml(text)}</span>`,
             isStandby: false,
             barClass,
             showMicBtn: false,
-            badgeText: "DEEPGRAM LIVE 🟢",
+            badgeText: "DEEPGRAM LIVE 🟢"
           });
 
           // If speech is finalized, smoothly return to standby after 6s of silence
@@ -3113,9 +2938,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
           render({
             pillClass: "pill-avatar",
-            pillText: isThinking
-              ? "⚡ Thinking"
-              : `🐼 ${escapeHtml(avatarName)}`,
+            pillText: isThinking ? "⚡ Thinking" : `🐼 ${escapeHtml(avatarName)}`,
             textHtml: isThinking
               ? `<span style="color:var(--text-dim); font-style:italic;">${escapeHtml(text)}</span>`
               : `<span class="avatar-highlight">${escapeHtml(text)}</span>`,
@@ -3136,17 +2959,15 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (el.captions) el.captions.classList.remove("hidden");
 
           // Step 1: User speaking
-          showUserSpeech("OK Pa, can you hear me live?", "wake-recording");
+          showUserSpeech('OK Pa, can you hear me live?', 'wake-recording');
 
           previewTimer = setTimeout(() => {
             // Step 2: Thinking
-            showAvatarSpeech("Panda is thinking…", true);
+            showAvatarSpeech('Panda is thinking…', true);
 
             previewTimer = setTimeout(() => {
               // Step 3: Panda answering
-              showAvatarSpeech(
-                "Loud and clear! Deepgram live subtitles are working in real-time! 🚀",
-              );
+              showAvatarSpeech('Loud and clear! Deepgram live subtitles are working in real-time! 🚀');
 
               previewTimer = setTimeout(() => {
                 isPreviewing = false;
@@ -3156,31 +2977,21 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           }, 2000);
         }
 
-        function render({
-          pillClass,
-          pillText,
-          textHtml,
-          isStandby,
-          barClass,
-          showMicBtn,
-          badgeText,
-        }) {
+        function render({ pillClass, pillText, textHtml, isStandby, barClass, showMicBtn, badgeText }) {
           if (el.subtitleBar) {
-            const activeTheme = settings.subtitleTheme || "glass";
-            el.subtitleBar.className = `subtitle-bar theme-${activeTheme} ${barClass || ""}`;
+            const activeTheme = settings.subtitleTheme || 'glass';
+            el.subtitleBar.className = `subtitle-bar theme-${activeTheme} ${barClass || ''}`;
           }
           if (el.subtitlePill) {
-            el.subtitlePill.className = `subtitle-pill ${pillClass || ""}`;
-            el.subtitlePill.textContent = pillText || "";
+            el.subtitlePill.className = `subtitle-pill ${pillClass || ''}`;
+            el.subtitlePill.textContent = pillText || '';
           }
           if (el.subtitleContent) {
-            el.subtitleContent.className = `subtitle-content ${isStandby ? "standby-hint" : ""}`;
-            el.subtitleContent.innerHTML = textHtml || "";
+            el.subtitleContent.className = `subtitle-content ${isStandby ? 'standby-hint' : ''}`;
+            el.subtitleContent.innerHTML = textHtml || '';
           }
           if (el.subtitleMicBtn) {
-            el.subtitleMicBtn.style.display = showMicBtn
-              ? "inline-block"
-              : "none";
+            el.subtitleMicBtn.style.display = showMicBtn ? "inline-block" : "none";
           }
           if (el.subtitleBadge && badgeText) {
             el.subtitleBadge.textContent = badgeText;
@@ -3190,11 +3001,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         function applyTheme(theme) {
           settings.subtitleTheme = theme;
           if (el.subtitleBar) {
-            const classes = el.subtitleBar.className
-              .split(" ")
-              .filter((c) => !c.startsWith("theme-"));
+            const classes = el.subtitleBar.className.split(' ').filter(c => !c.startsWith('theme-'));
             classes.push(`theme-${theme}`);
-            el.subtitleBar.className = classes.join(" ");
+            el.subtitleBar.className = classes.join(' ');
           }
         }
 
@@ -3210,10 +3019,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       const subtitleDraggable = (() => {
         let isDragging = false;
         let isResizing = false;
-        let startX = 0,
-          startY = 0;
-        let initialLeft = 0,
-          initialTop = 0;
+        let startX = 0, startY = 0;
+        let initialLeft = 0, initialTop = 0;
         let initialWidth = 0;
 
         function applyLayout() {
@@ -3221,11 +3028,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           const width = settings.subtitleWidth || 860;
           el.captions.style.width = `min(${width}px, 94vw)`;
 
-          if (
-            settings.subtitlePos &&
-            typeof settings.subtitlePos.x === "number" &&
-            typeof settings.subtitlePos.y === "number"
-          ) {
+          if (settings.subtitlePos && typeof settings.subtitlePos.x === 'number' && typeof settings.subtitlePos.y === 'number') {
             el.captions.classList.add("custom-positioned");
             el.captions.style.left = `${settings.subtitlePos.x}px`;
             el.captions.style.top = `${settings.subtitlePos.y}px`;
@@ -3239,19 +3042,11 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             el.captions.style.transform = "translateX(-50%)";
           }
 
-          document.documentElement.style.setProperty(
-            "--subtitle-font-size",
-            `${settings.subtitleFontSize || 16}px`,
-          );
+          document.documentElement.style.setProperty('--subtitle-font-size', `${settings.subtitleFontSize || 16}px`);
         }
 
         const onDragStart = (e) => {
-          if (
-            e.target.closest(
-              "button, input, select, .subtitle-resize-handle, .subtitle-actions",
-            )
-          )
-            return;
+          if (e.target.closest('button, input, select, .subtitle-resize-handle, .subtitle-actions')) return;
           e.stopPropagation();
           isDragging = true;
           if (el.captions) el.captions.classList.add("is-dragging");
@@ -3268,8 +3063,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           el.captions.style.bottom = "auto";
           el.captions.style.transform = "none";
 
-          window.addEventListener("pointermove", onDragMove);
-          window.addEventListener("pointerup", onDragEnd);
+          window.addEventListener('pointermove', onDragMove);
+          window.addEventListener('pointerup', onDragEnd);
         };
 
         const onDragMove = (e) => {
@@ -3295,36 +3090,29 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (!isDragging) return;
           isDragging = false;
           if (el.captions) el.captions.classList.remove("is-dragging");
-          window.removeEventListener("pointermove", onDragMove);
-          window.removeEventListener("pointerup", onDragEnd);
+          window.removeEventListener('pointermove', onDragMove);
+          window.removeEventListener('pointerup', onDragEnd);
 
           if (el.captions) {
             const rect = el.captions.getBoundingClientRect();
-            settings.subtitlePos = {
-              x: Math.round(rect.left),
-              y: Math.round(rect.top),
-            };
+            settings.subtitlePos = { x: Math.round(rect.left), y: Math.round(rect.top) };
             saveSettings();
           }
         };
 
         if (el.subtitleDragHandle) {
-          el.subtitleDragHandle.addEventListener("pointerdown", (e) => {
+          el.subtitleDragHandle.addEventListener('pointerdown', (e) => {
             e.stopPropagation();
             onDragStart(e);
           });
-          el.subtitleDragHandle.addEventListener("dblclick", (e) => {
+          el.subtitleDragHandle.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             resetSubtitleLayout();
           });
         }
         if (el.subtitleBar) {
-          el.subtitleBar.addEventListener("pointerdown", (e) => {
-            if (
-              e.target === el.subtitleBar ||
-              e.target.classList.contains("subtitle-content") ||
-              e.target.classList.contains("subtitle-drag-handle")
-            ) {
+          el.subtitleBar.addEventListener('pointerdown', (e) => {
+            if (e.target === el.subtitleBar || e.target.classList.contains('subtitle-content') || e.target.classList.contains('subtitle-drag-handle')) {
               e.stopPropagation();
               onDragStart(e);
             }
@@ -3332,38 +3120,34 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         }
 
         if (el.subtitleResizeHandle) {
-          el.subtitleResizeHandle.addEventListener("pointerdown", (e) => {
+          el.subtitleResizeHandle.addEventListener('pointerdown', (e) => {
             e.stopPropagation();
             isResizing = true;
             startX = e.clientX;
             const rect = el.captions.getBoundingClientRect();
             initialWidth = rect.width;
 
-            window.addEventListener("pointermove", onResizeMove);
-            window.addEventListener("pointerup", onResizeEnd);
+            window.addEventListener('pointermove', onResizeMove);
+            window.addEventListener('pointerup', onResizeEnd);
           });
         }
 
         const onResizeMove = (e) => {
           if (!isResizing || !el.captions) return;
           const dx = e.clientX - startX;
-          let newWidth = Math.max(
-            340,
-            Math.min(initialWidth + dx, window.innerWidth - 20),
-          );
+          let newWidth = Math.max(340, Math.min(initialWidth + dx, window.innerWidth - 20));
           el.captions.style.width = `${newWidth}px`;
           if (el.subtitleWidthRange) {
             el.subtitleWidthRange.value = newWidth;
-            if (el.subtitleWidthVal)
-              el.subtitleWidthVal.textContent = `${newWidth}px`;
+            if (el.subtitleWidthVal) el.subtitleWidthVal.textContent = `${newWidth}px`;
           }
         };
 
         const onResizeEnd = () => {
           if (!isResizing) return;
           isResizing = false;
-          window.removeEventListener("pointermove", onResizeMove);
-          window.removeEventListener("pointerup", onResizeEnd);
+          window.removeEventListener('pointermove', onResizeMove);
+          window.removeEventListener('pointerup', onResizeEnd);
 
           if (el.captions) {
             const rect = el.captions.getBoundingClientRect();
@@ -3401,9 +3185,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
         // Fallback for legacy elements
         if (el.textYou) el.textYou.textContent = textClean;
-        if (el.tagYou)
-          el.tagYou.textContent =
-            mode === "wake-recording" ? "🐼 Hearing Prompt" : "🎙️ You";
+        if (el.tagYou) el.tagYou.textContent = mode === "wake-recording" ? "🐼 Hearing Prompt" : "🎙️ You";
       }
 
       function showAvatar(text, isThinking = false) {
@@ -3415,8 +3197,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
         // Fallback for legacy elements
         if (el.textAvatar) el.textAvatar.textContent = textClean;
-        if (el.tagAvatar)
-          el.tagAvatar.textContent = `🐼 ${el.avatarName ? el.avatarName.value : "Panda"}`;
+        if (el.tagAvatar) el.tagAvatar.textContent = `🐼 ${el.avatarName ? el.avatarName.value : "Panda"}`;
       }
 
       /* ============================================================================
@@ -3861,17 +3642,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
               provider: this.name,
               action: "replace-key",
             });
-          if (
-            !model ||
-            (!model.endsWith(":free") &&
-              !this._modelsCache?.some((m) => m.id === model))
-          ) {
-            const fallback =
-              this._modelsCache?.[0]?.id ||
-              "inclusionai/ling-3.0-flash-vl:free";
-            console.warn(
-              `[OpenRouter] Switching from non-free model '${model}' to free model '${fallback}'`,
-            );
+          if (!model || (!model.endsWith(':free') && !this._modelsCache?.some(m => m.id === model))) {
+            const fallback = this._modelsCache?.[0]?.id || "inclusionai/ling-3.0-flash-vl:free";
+            console.warn(`[OpenRouter] Switching from non-free model '${model}' to free model '${fallback}'`);
             model = fallback;
             settings.aiModel = fallback;
             saveSettings();
@@ -3890,12 +3663,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           }
           if (!res.ok) {
             if (res.status === 402) {
-              console.warn(
-                `[OpenRouter] Insufficient credits for '${model}'. Switching to free model...`,
-              );
-              const freeModel =
-                this._modelsCache?.find((m) => m.id.endsWith(":free"))?.id ||
-                "inclusionai/ling-3.0-flash-vl:free";
+              console.warn(`[OpenRouter] Insufficient credits for '${model}'. Switching to free model...`);
+              const freeModel = this._modelsCache?.find(m => m.id.endsWith(':free'))?.id || "inclusionai/ling-3.0-flash-vl:free";
               model = freeModel;
               settings.aiModel = freeModel;
               saveSettings();
@@ -3910,15 +3679,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
               } catch (err) {
                 throw friendlyNetworkError(this.name, err);
               }
-            } else if (
-              (res.status === 401 ||
-                res.status === 403 ||
-                res.status === 429) &&
-              SecureStorage.failover(this.id)
-            ) {
-              console.warn(
-                `[OpenRouter] Request failed (${res.status}). Retrying with fallback key...`,
-              );
+            } else if ((res.status === 401 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[OpenRouter] Request failed (${res.status}). Retrying with fallback key...`);
               if (typeof refreshAIModelUI === "function") refreshAIModelUI();
               try {
                 res = await fetch(`${this.BASE}/chat/completions`, {
@@ -4226,18 +3988,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             throw friendlyNetworkError(this.name, err);
           }
           if (!res.ok) {
-            if (
-              (res.status === 401 ||
-                res.status === 402 ||
-                res.status === 403 ||
-                res.status === 429) &&
-              SecureStorage.failover(this.id)
-            ) {
-              console.warn(
-                `[ElevenLabs] Request failed (${res.status}). Retrying with fallback key...`,
-              );
-              if (typeof refreshTTSModelVoiceUI === "function")
-                refreshTTSModelVoiceUI();
+            if ((res.status === 401 || res.status === 402 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[ElevenLabs] Request failed (${res.status}). Retrying with fallback key...`);
+              if (typeof refreshTTSModelVoiceUI === "function") refreshTTSModelVoiceUI();
               try {
                 res = await fetch(
                   `${this.BASE}/text-to-speech/${encodeURIComponent(voice)}/stream?optimize_streaming_latency=3`,
@@ -4462,18 +4215,9 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             throw friendlyNetworkError(this.name, err);
           }
           if (!res.ok) {
-            if (
-              (res.status === 401 ||
-                res.status === 402 ||
-                res.status === 403 ||
-                res.status === 429) &&
-              SecureStorage.failover(this.id)
-            ) {
-              console.warn(
-                `[Noiz] Request failed (${res.status}). Retrying with fallback key...`,
-              );
-              if (typeof refreshTTSModelVoiceUI === "function")
-                refreshTTSModelVoiceUI();
+            if ((res.status === 401 || res.status === 402 || res.status === 403 || res.status === 429) && SecureStorage.failover(this.id)) {
+              console.warn(`[Noiz] Request failed (${res.status}). Retrying with fallback key...`);
+              if (typeof refreshTTSModelVoiceUI === "function") refreshTTSModelVoiceUI();
               try {
                 res = await fetch(NOIZ_API.base + NOIZ_API.synthesize, {
                   method: "POST",
@@ -4608,18 +4352,14 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           } catch (err) {
             currentAudio = null;
             if (err && err.name === "AbortError") return; // cancelled by barge-in, don't surface as an error
-            console.warn(
-              `[TTS] ${adapter.name} failed (${err.message}). Falling back to browser voice.`,
-            );
+            console.warn(`[TTS] ${adapter.name} failed (${err.message}). Falling back to browser voice.`);
             if (adapter.id !== "browser") {
               try {
-                const fallbackResult = await adapters["browser"].generateSpeech(
-                  {
-                    text,
-                    voice: "",
-                    settings: settings.voiceSettings,
-                  },
-                );
+                const fallbackResult = await adapters["browser"].generateSpeech({
+                  text,
+                  voice: "",
+                  settings: settings.voiceSettings
+                });
                 onTalkStart();
                 if (fallbackResult.utterance) {
                   const utter = fallbackResult.utterance;
@@ -4636,10 +4376,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
                   return;
                 }
               } catch (fallbackErr) {
-                console.error(
-                  "[TTS] Browser voice fallback failed:",
-                  fallbackErr,
-                );
+                console.error("[TTS] Browser voice fallback failed:", fallbackErr);
               }
             }
             showTTSError(
@@ -4770,13 +4507,11 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           el.aiKeyToggle.style.display = showToggle ? "inline-block" : "none";
           if (showToggle) {
             const slot = SecureStorage.getSlot(adapter.id);
-            el.aiKeyToggle.textContent =
-              slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
+            el.aiKeyToggle.textContent = slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
           }
 
           if (src.startsWith("env-")) {
-            const slotLabel =
-              src === "env-new" ? "new .env key" : "old .env key";
+            const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
             el.aiKeySource.textContent = `Using ${slotLabel}`;
             el.aiKeySource.style.display = "block";
           } else if (src === "manual") {
@@ -4924,13 +4659,11 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           el.ttsKeyToggle.style.display = showToggle ? "inline-block" : "none";
           if (showToggle) {
             const slot = SecureStorage.getSlot(adapter.id);
-            el.ttsKeyToggle.textContent =
-              slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
+            el.ttsKeyToggle.textContent = slot === "new" ? "⇄ Use Old Key" : "⇄ Use New Key";
           }
 
           if (src.startsWith("env-")) {
-            const slotLabel =
-              src === "env-new" ? "new .env key" : "old .env key";
+            const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
             el.ttsKeySource.textContent = `Using ${slotLabel}`;
             el.ttsKeySource.style.display = "block";
           } else if (src === "manual") {
@@ -5125,21 +4858,13 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       function showSTTStatus(msg, type = "info") {
         if (!el.sttStatusNote) return;
         el.sttStatusNote.textContent = msg;
-        el.sttStatusNote.style.color =
-          type === "err"
-            ? "var(--err)"
-            : type === "ok"
-              ? "var(--ok)"
-              : "var(--text-dim)";
+        el.sttStatusNote.style.color = type === "err" ? "var(--err)" : type === "ok" ? "var(--ok)" : "var(--text-dim)";
       }
 
       function refreshSTTUI() {
-        const provider = el.sttProviderSelect
-          ? el.sttProviderSelect.value
-          : settings.sttProvider || "deepgram";
+        const provider = el.sttProviderSelect ? el.sttProviderSelect.value : (settings.sttProvider || "deepgram");
         const isDeepgram = provider === "deepgram";
-        if (el.sttKeyRow)
-          el.sttKeyRow.style.display = isDeepgram ? "flex" : "none";
+        if (el.sttKeyRow) el.sttKeyRow.style.display = isDeepgram ? "flex" : "none";
 
         if (el.sttKeyInput) {
           el.sttKeyInput.value = "";
@@ -5152,16 +4877,14 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           if (isDeepgram) {
             const src = SecureStorage.source("deepgram");
             if (src.startsWith("env-")) {
-              const slotLabel =
-                src === "env-new" ? "new .env key" : "old .env key";
+              const slotLabel = src === "env-new" ? "new .env key" : "old .env key";
               el.sttKeySource.textContent = `Using ${slotLabel}`;
               el.sttKeySource.style.display = "block";
             } else if (src === "manual") {
               el.sttKeySource.textContent = "Using manually pasted key";
               el.sttKeySource.style.display = "block";
             } else {
-              el.sttKeySource.textContent =
-                "No key configured. Set in .env or paste above.";
+              el.sttKeySource.textContent = "No key configured. Set in .env or paste above.";
               el.sttKeySource.style.display = "block";
             }
           } else {
@@ -5170,26 +4893,16 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         }
 
         if (el.wakePhraseRow) {
-          el.wakePhraseRow.style.display =
-            el.wakeWordToggle && el.wakeWordToggle.checked ? "flex" : "none";
+          el.wakePhraseRow.style.display = (el.wakeWordToggle && el.wakeWordToggle.checked) ? "flex" : "none";
         }
 
         if (listening) {
-          if (
-            isDeepgram &&
-            typeof DeepgramSTTService !== "undefined" &&
-            DeepgramSTTService.isConnected()
-          ) {
+          if (isDeepgram && typeof DeepgramSTTService !== "undefined" && DeepgramSTTService.isConnected()) {
             setBadge(el.sttBadge, el.sttBadgeText, "ok", "Deepgram Live");
           } else if (isDeepgram && !SecureStorage.has("deepgram")) {
             setBadge(el.sttBadge, el.sttBadgeText, "warn", "no key");
           } else {
-            setBadge(
-              el.sttBadge,
-              el.sttBadgeText,
-              "ok",
-              isDeepgram ? "connecting…" : "WebSpeech",
-            );
+            setBadge(el.sttBadge, el.sttBadgeText, "ok", isDeepgram ? "connecting…" : "WebSpeech");
           }
         } else {
           setBadge(el.sttBadge, el.sttBadgeText, "", "mic off");
@@ -5238,10 +4951,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       if (el.wakeWordToggle) {
         el.wakeWordToggle.addEventListener("change", () => {
           settings.wakeWordMode = el.wakeWordToggle.checked;
-          if (el.wakePhraseRow)
-            el.wakePhraseRow.style.display = el.wakeWordToggle.checked
-              ? "flex"
-              : "none";
+          if (el.wakePhraseRow) el.wakePhraseRow.style.display = el.wakeWordToggle.checked ? "flex" : "none";
           saveSettings();
           if (typeof WakeWordManager !== "undefined") {
             WakeWordManager.onPhraseChanged();
@@ -5315,12 +5025,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         el.subtitleFontSizeRange.addEventListener("input", () => {
           const val = parseInt(el.subtitleFontSizeRange.value, 10) || 16;
           settings.subtitleFontSize = val;
-          if (el.subtitleFontSizeVal)
-            el.subtitleFontSizeVal.textContent = `${val}px`;
-          document.documentElement.style.setProperty(
-            "--subtitle-font-size",
-            `${val}px`,
-          );
+          if (el.subtitleFontSizeVal) el.subtitleFontSizeVal.textContent = `${val}px`;
+          document.documentElement.style.setProperty('--subtitle-font-size', `${val}px`);
           saveSettings();
         });
       }
@@ -5345,26 +5051,14 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           el.sttTestBtn.disabled = true;
           el.sttTestBtn.innerHTML = '<span class="spinner"></span> Testing…';
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              audio: true,
-            });
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             stream.getTracks().forEach((t) => t.stop());
             const key = SecureStorage.get("deepgram");
-            if (
-              el.sttProviderSelect &&
-              el.sttProviderSelect.value === "deepgram" &&
-              !key
-            ) {
-              showSTTStatus(
-                "⚠️ Mic works! Enter your Deepgram API key above or in .env to enable live streaming STT.",
-                "err",
-              );
+            if (el.sttProviderSelect && el.sttProviderSelect.value === "deepgram" && !key) {
+              showSTTStatus("⚠️ Mic works! Enter your Deepgram API key above or in .env to enable live streaming STT.", "err");
               setBadge(el.sttBadge, el.sttBadgeText, "warn", "mic ok, no key");
             } else {
-              showSTTStatus(
-                "✅ Mic accessible! Say 'OK Pa' into the mic to talk with the Panda.",
-                "ok",
-              );
+              showSTTStatus("✅ Mic accessible! Say 'OK Pa' into the mic to talk with the Panda.", "ok");
               setBadge(el.sttBadge, el.sttBadgeText, "ok", "ready");
             }
           } catch (err) {
@@ -5492,8 +5186,8 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
          ========================================================================= */
       const WakeWordManager = (() => {
         // States: 'IDLE_WAITING' | 'HEARING_PROMPT' | 'PROCESSING' | 'REPLYING'
-        let state = "IDLE_WAITING";
-        let promptBuffer = "";
+        let state = 'IDLE_WAITING';
+        let promptBuffer = '';
         let wakeTriggerTimer = null;
         let silenceDebounceTimer = null;
 
@@ -5506,18 +5200,15 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             return;
           }
 
-          if (state === "IDLE_WAITING") {
+          if (state === 'IDLE_WAITING') {
             el.dotWake.className = "dot wake-wait";
-            el.labelWake.textContent = (
-              settings.wakePhrase || "OK PA"
-            ).toUpperCase();
-          } else if (state === "HEARING_PROMPT") {
+            el.labelWake.textContent = (settings.wakePhrase || "OK PA").toUpperCase();
+          } else if (state === 'HEARING_PROMPT') {
             el.dotWake.className = "dot wake-hearing";
             el.labelWake.textContent = "HEARING PROMPT";
-          } else if (state === "PROCESSING" || state === "REPLYING") {
+          } else if (state === 'PROCESSING' || state === 'REPLYING') {
             el.dotWake.className = "dot wake-processing";
-            el.labelWake.textContent =
-              state === "PROCESSING" ? "THINKING" : "REPLYING";
+            el.labelWake.textContent = state === 'PROCESSING' ? "THINKING" : "REPLYING";
           }
         }
 
@@ -5536,7 +5227,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           const words = raw
             .split(/[\s,.\-_!?:;'"/\\]+/)
             .filter(Boolean)
-            .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+            .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
           if (words.length === 0) {
             return /\b(?:ok|okay|o\.k\.|o\s*k)[,.\s\-_]*(?:pa|pah|paa|panda)\b/i;
@@ -5550,10 +5241,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           const re = getWakeRegex();
           const match = rawText.match(re);
           if (match) {
-            const remainder = rawText
-              .slice(match.index + match[0].length)
-              .replace(/^[,!?:;.\-_'\s]+/, "")
-              .trim();
+            const remainder = rawText.slice(match.index + match[0].length).replace(/^[,!?:;.\-_'\s]+/, '').trim();
             return {
               matched: true,
               phrase: match[0],
@@ -5565,38 +5253,36 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         }
 
         function onPhraseChanged() {
-          if (state === "IDLE_WAITING") {
-            promptBuffer = "";
+          if (state === 'IDLE_WAITING') {
+            promptBuffer = '';
           }
           updateHUD();
-          console.log(
-            `[WakeWord] Wake phrase updated live to: "${settings.wakePhrase || "OK Pa"}"`,
-          );
+          console.log(`[WakeWord] Wake phrase updated live to: "${settings.wakePhrase || 'OK Pa'}"`);
         }
 
         function resetToIdle() {
           clearTimeout(wakeTriggerTimer);
           clearTimeout(silenceDebounceTimer);
-          promptBuffer = "";
-          setWakeState("IDLE_WAITING");
+          promptBuffer = '';
+          setWakeState('IDLE_WAITING');
         }
 
-        function triggerWakeWord(initialPromptText = "") {
-          setWakeState("HEARING_PROMPT");
+        function triggerWakeWord(initialPromptText = '') {
+          setWakeState('HEARING_PROMPT');
           playAttentiveGesture();
 
-          promptBuffer = (initialPromptText || "").trim();
+          promptBuffer = (initialPromptText || '').trim();
           if (promptBuffer) {
-            showYou(promptBuffer, "wake-recording");
+            showYou(promptBuffer, 'wake-recording');
           } else {
-            showYou("Listening…", "wake-recording");
+            showYou("Listening…", 'wake-recording');
           }
 
           // Safety timeout: if awakened but no speech arrives within 6 seconds, reset to idle
           clearTimeout(wakeTriggerTimer);
           wakeTriggerTimer = setTimeout(() => {
-            if (state === "HEARING_PROMPT") {
-              console.log("[WakeWord] Prompt timed out after wake phrase.");
+            if (state === 'HEARING_PROMPT') {
+              console.log('[WakeWord] Prompt timed out after wake phrase.');
               resetToIdle();
             }
           }, 6000);
@@ -5606,14 +5292,14 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           clearTimeout(wakeTriggerTimer);
           clearTimeout(silenceDebounceTimer);
           const finalPrompt = promptBuffer.trim();
-          promptBuffer = "";
+          promptBuffer = '';
 
           if (!finalPrompt || finalPrompt.length < 2) {
             resetToIdle();
             return;
           }
 
-          setWakeState("PROCESSING");
+          setWakeState('PROCESSING');
           showYou(finalPrompt);
           console.log(`[WakeWord] Submitting prompt to AI: "${finalPrompt}"`);
           askAndRespond(finalPrompt);
@@ -5621,8 +5307,26 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
         // Called on each transcript result (interim or final) from STT
         function handleSpeech({ text, isFinal, speechFinal }) {
-          const raw = (text || "").trim();
+          const raw = (text || '').trim();
           if (!raw) return;
+
+          // Presence commands are global — they work no matter what state
+          // the wake-word machine is in (idle, hearing a prompt, AI
+          // replying), and short-circuit here so they never get treated as
+          // a chat prompt in always-on mode or as background noise in
+          // wake-word mode. Only act on finalized speech: interim results
+          // still have words shifting mid-utterance and would re-trigger on
+          // every partial match otherwise.
+          if (isFinal || speechFinal) {
+            if (SUMMON_PHRASE_RE.test(raw)) {
+              AvatarPresence.summon();
+              return;
+            }
+            if (DISMISS_PHRASE_RE.test(raw)) {
+              AvatarPresence.dismiss();
+              return;
+            }
+          }
 
           const wakeWordEnabled = settings.wakeWordMode !== false;
 
@@ -5631,7 +5335,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             if (isTalking && raw.length >= 4) {
               handleBargeIn();
             }
-            showYou(raw, isFinal ? "normal" : "interim");
+            showYou(raw, isFinal ? 'normal' : 'interim');
             if (isFinal || speechFinal) {
               fireQuestion(raw);
             }
@@ -5640,12 +5344,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
           // In Wake-Word mode:
           // Check for barge-in while AI is talking or replying
-          if (isTalking || state === "REPLYING" || state === "PROCESSING") {
+          if (isTalking || state === 'REPLYING' || state === 'PROCESSING') {
             const wakeMatch = matchWakePhrase(raw);
             if (wakeMatch) {
-              console.log(
-                `[WakeWord] Barge-in triggered by wake phrase "${wakeMatch.phrase}" during reply!`,
-              );
+              console.log(`[WakeWord] Barge-in triggered by wake phrase "${wakeMatch.phrase}" during reply!`);
               handleBargeIn();
               triggerWakeWord(wakeMatch.remainder);
               return;
@@ -5654,12 +5356,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           }
 
           // State 1: IDLE_WAITING for wake word
-          if (state === "IDLE_WAITING") {
+          if (state === 'IDLE_WAITING') {
             const wakeMatch = matchWakePhrase(raw);
             if (wakeMatch) {
-              console.log(
-                `[WakeWord] Detected wake phrase "${wakeMatch.phrase}" in: "${raw}" (target: "${settings.wakePhrase || "OK Pa"}")`,
-              );
+              console.log(`[WakeWord] Detected wake phrase "${wakeMatch.phrase}" in: "${raw}" (target: "${settings.wakePhrase || 'OK Pa'}")`);
               triggerWakeWord(wakeMatch.remainder);
 
               // If the speaker already finished their sentence in one breath:
@@ -5670,33 +5370,30 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             } else {
               // Not the wake word: show in live subtitles so streamer sees mic audio activity
               if (settings.subtitlesEnabled) {
-                showYou(raw, "interim");
+                showYou(raw, 'interim');
               }
             }
             return;
           }
 
           // State 2: HEARING_PROMPT — capturing user's question
-          if (state === "HEARING_PROMPT") {
+          if (state === 'HEARING_PROMPT') {
             // Keep safety timeout alive while user speaks
             clearTimeout(wakeTriggerTimer);
             wakeTriggerTimer = setTimeout(() => {
-              if (state === "HEARING_PROMPT") finalizePrompt();
+              if (state === 'HEARING_PROMPT') finalizePrompt();
             }, 3000);
 
             // Strip wake phrase if user repeated it
             const re = getWakeRegex();
             let promptChunk = raw;
             if (re.test(promptChunk)) {
-              promptChunk = promptChunk
-                .replace(re, "")
-                .replace(/^[,!?:;.\-_'\s]+/, "")
-                .trim();
+              promptChunk = promptChunk.replace(re, '').replace(/^[,!?:;.\-_'\s]+/, '').trim();
             }
 
             if (promptChunk) {
               promptBuffer = promptChunk;
-              showYou(promptBuffer, "wake-recording");
+              showYou(promptBuffer, 'wake-recording');
             }
 
             // Smart Stop Detection:
@@ -5717,18 +5414,16 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         }
 
         function onPromptSubmitted() {
-          setWakeState("PROCESSING");
+          setWakeState('PROCESSING');
         }
 
         function onResponseStarted() {
-          setWakeState("REPLYING");
+          setWakeState('REPLYING');
         }
 
         function onResponseFinished() {
           const phraseName = settings.wakePhrase || "OK Pa";
-          console.log(
-            `[WakeWord] Panda finished reply. Only hearing again on "${phraseName}".`,
-          );
+          console.log(`[WakeWord] Panda finished reply. Only hearing again on "${phraseName}".`);
           resetToIdle();
         }
 
@@ -5760,11 +5455,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         const MAX_RECONNECT = 5;
 
         function getApiKey() {
-          return (
-            SecureStorage.get("deepgram") ||
-            (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY) ||
-            ""
-          );
+          return SecureStorage.get("deepgram") || (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY) || "";
         }
 
         async function start({ onSpeech, onError, onStateChange }) {
@@ -5773,8 +5464,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             throw new Error("No Deepgram API key configured.");
           }
 
-          if (isRunning && socket && socket.readyState === WebSocket.OPEN)
-            return;
+          if (isRunning && socket && socket.readyState === WebSocket.OPEN) return;
           isRunning = true;
           isConnecting = true;
           if (onStateChange) onStateChange("connecting");
@@ -5813,28 +5503,19 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           socket.onopen = () => {
             isConnecting = false;
             reconnectAttempts = 0;
-            console.log(
-              "[Deepgram] Live WebSocket connected. Streaming microphone audio...",
-            );
+            console.log("[Deepgram] Live WebSocket connected. Streaming microphone audio...");
             if (onStateChange) onStateChange("live");
 
             const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
               ? "audio/webm;codecs=opus"
               : MediaRecorder.isTypeSupported("audio/webm")
-                ? "audio/webm"
-                : "";
+              ? "audio/webm"
+              : "";
 
             try {
-              mediaRecorder = mime
-                ? new MediaRecorder(mediaStream, { mimeType: mime })
-                : new MediaRecorder(mediaStream);
+              mediaRecorder = mime ? new MediaRecorder(mediaStream, { mimeType: mime }) : new MediaRecorder(mediaStream);
               mediaRecorder.ondataavailable = (e) => {
-                if (
-                  e.data &&
-                  e.data.size > 0 &&
-                  socket &&
-                  socket.readyState === WebSocket.OPEN
-                ) {
+                if (e.data && e.data.size > 0 && socket && socket.readyState === WebSocket.OPEN) {
                   socket.send(e.data);
                 }
               };
@@ -5866,31 +5547,19 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
           socket.onerror = (event) => {
             console.warn("[Deepgram] WebSocket error:", event);
-            if (onError)
-              onError(
-                new Error(
-                  "Deepgram WebSocket error. Check API key and connection.",
-                ),
-              );
+            if (onError) onError(new Error("Deepgram WebSocket error. Check API key and connection."));
           };
 
           socket.onclose = (event) => {
             console.log(`[Deepgram] WebSocket closed (code: ${event.code}).`);
             if (mediaRecorder && mediaRecorder.state !== "inactive") {
-              try {
-                mediaRecorder.stop();
-              } catch (e) {}
+              try { mediaRecorder.stop(); } catch (e) {}
             }
             if (isRunning && reconnectAttempts < MAX_RECONNECT) {
               reconnectAttempts++;
-              console.log(
-                `[Deepgram] Reconnecting (${reconnectAttempts}/${MAX_RECONNECT})...`,
-              );
+              console.log(`[Deepgram] Reconnecting (${reconnectAttempts}/${MAX_RECONNECT})...`);
               setTimeout(() => {
-                if (isRunning)
-                  start({ onSpeech, onError, onStateChange }).catch(
-                    console.error,
-                  );
+                if (isRunning) start({ onSpeech, onError, onStateChange }).catch(console.error);
               }, 1200 * reconnectAttempts);
             } else if (isRunning) {
               if (onStateChange) onStateChange("off");
@@ -5903,9 +5572,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
           isConnecting = false;
           reconnectAttempts = 0;
           if (mediaRecorder && mediaRecorder.state !== "inactive") {
-            try {
-              mediaRecorder.stop();
-            } catch (e) {}
+            try { mediaRecorder.stop(); } catch (e) {}
             mediaRecorder = null;
           }
           if (mediaStream) {
@@ -5913,9 +5580,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             mediaStream = null;
           }
           if (socket) {
-            try {
-              socket.close();
-            } catch (e) {}
+            try { socket.close(); } catch (e) {}
             socket = null;
           }
         }
@@ -5932,8 +5597,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
       /* ============================================================================
          START & STOP LISTENING (DEEPGRAM WITH WEBSPEECH FALLBACK)
          ========================================================================= */
-      let lastFinalText = "",
-        lastFinalAt = 0;
+      let lastFinalText = "", lastFinalAt = 0;
 
       function fireQuestion(text) {
         text = (text || "").trim();
@@ -5947,40 +5611,28 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
 
       function startWebSpeechFallback() {
         if (!SR) {
-          el.loaderStatus.textContent +=
-            "\nSpeech recognition not supported in this browser.";
+          el.loaderStatus.textContent += "\nSpeech recognition not supported in this browser.";
           setBadge(el.sttBadge, el.sttBadgeText, "warn", "unsupported");
           return;
         }
         if (recognizer) {
-          try {
-            recognizer.stop();
-          } catch (e) {}
+          try { recognizer.stop(); } catch (e) {}
         }
         recognizer = new SR();
         recognizer.continuous = true;
         recognizer.interimResults = true;
         recognizer.lang = navigator.language || "en-US";
         recognizer.onresult = (e) => {
-          let finalText = "",
-            interimText = "";
+          let finalText = "", interimText = "";
           for (let i = e.resultIndex; i < e.results.length; i++) {
             const r = e.results[i];
             if (r.isFinal) finalText += r[0].transcript;
             else interimText += r[0].transcript;
           }
           if (finalText.trim()) {
-            WakeWordManager.handleSpeech({
-              text: finalText,
-              isFinal: true,
-              speechFinal: true,
-            });
+            WakeWordManager.handleSpeech({ text: finalText, isFinal: true, speechFinal: true });
           } else if (interimText.trim()) {
-            WakeWordManager.handleSpeech({
-              text: interimText,
-              isFinal: false,
-              speechFinal: false,
-            });
+            WakeWordManager.handleSpeech({ text: interimText, isFinal: false, speechFinal: false });
           }
         };
         recognizer.onerror = (e) => {
@@ -5997,14 +5649,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
             return;
           }
           if (!DeepgramSTTService.isConnected()) {
-            try {
-              recognizer.start();
-            } catch (e) {}
+            try { recognizer.start(); } catch (e) {}
           }
         };
-        try {
-          recognizer.start();
-        } catch (e) {}
+        try { recognizer.start(); } catch (e) {}
         setBadge(el.sttBadge, el.sttBadgeText, "ok", "WebSpeech");
         setMicDot(isTalking ? "warn" : "live");
       }
@@ -6015,10 +5663,7 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         WakeWordManager.updateHUD();
 
         const provider = settings.sttProvider || "deepgram";
-        const hasDeepgramKey = !!(
-          SecureStorage.get("deepgram") ||
-          (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY)
-        );
+        const hasDeepgramKey = !!(SecureStorage.get("deepgram") || (window.ENV_CONFIG && window.ENV_CONFIG.DEEPGRAM_API_KEY));
 
         if (provider === "deepgram" && hasDeepgramKey) {
           try {
@@ -6046,16 +5691,12 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
                 } else {
                   setMicDot("off");
                 }
-                if (typeof SubtitleManager !== "undefined")
-                  SubtitleManager.updateStandby();
+                if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
               },
             });
             return;
           } catch (err) {
-            console.warn(
-              "[STT] Deepgram initialization failed, falling back to WebSpeech:",
-              err.message,
-            );
+            console.warn("[STT] Deepgram initialization failed, falling back to WebSpeech:", err.message);
             showSTTStatus(err.message, "err");
           }
         }
@@ -6068,16 +5709,13 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         listening = false;
         DeepgramSTTService.stop();
         if (recognizer) {
-          try {
-            recognizer.stop();
-          } catch (e) {}
+          try { recognizer.stop(); } catch (e) {}
           recognizer = null;
         }
         WakeWordManager.resetToIdle();
         setMicDot("off");
         setBadge(el.sttBadge, el.sttBadgeText, "", "mic off");
-        if (typeof SubtitleManager !== "undefined")
-          SubtitleManager.updateStandby();
+        if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
       }
 
       refreshSTTUI();
@@ -6086,12 +5724,10 @@ You are {avatar}, a witty, upbeat AI co-host sitting next to {streamer} on a liv
         if (el.micToggle.checked) startListening();
         else stopListening();
         saveSettings();
-        if (typeof SubtitleManager !== "undefined")
-          SubtitleManager.updateStandby();
+        if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
       });
       if (settings.micOn) startListening();
-      if (typeof SubtitleManager !== "undefined")
-        SubtitleManager.updateStandby();
+      if (typeof SubtitleManager !== "undefined") SubtitleManager.updateStandby();
 
       el.textFallbackToggle.addEventListener("change", () => {
         el.textFallbackWrap.classList.toggle(

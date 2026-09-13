@@ -148,6 +148,14 @@ export class VisionSystem {
     this._depthBusy = false;
     this._depthVersion = 0; // bumped each time _depthMap is replaced
 
+    // Session 6: temporal smoothing for depth, same idea as _maskSmooth
+    // below. Depth-Anything's raw per-frame output has enough pixel noise
+    // that occlusion flickers right at the avatarDepth boundary even when
+    // you're holding still. Blending each new frame in rather than using it
+    // raw fixes that without adding a perceptible frame of latency.
+    this._depthSmooth = null; // Float32Array, same length as depth map, or null before first frame
+    this._depthSmoothFactor = 0.4; // weight given to each new frame; lower = steadier, slower to react
+
     // Person mask, as an offscreen canvas: alpha = person probability*255,
     // RGB = the actual video pixels (so it can be drawn straight onto an
     // occlusion layer with destination-in / drawn directly).
@@ -186,7 +194,19 @@ export class VisionSystem {
     // (both want a plain 2D canvas / ImageBitmap, not a <video> element,
     // to control resolution and stay fast).
     this._depthScratch = document.createElement("canvas");
-    this._segScratch = null; // segmenter can read the <video> directly
+    // Session 6 perf fix: MediaPipe's ImageSegmenter returns a categoryMask
+    // sized to whatever input it was given — if you feed it the raw <video>
+    // element (1280x720 typical webcam), _maskCanvas and every per-pixel
+    // loop that reads it (_runSegmentation's smoothing pass,
+    // _buildPixelOcclusionStencil) end up doing ~920k-iteration CPU loops
+    // every frame, which is the dominant source of jank. Feeding it this
+    // downscaled scratch canvas instead keeps the mask at a fixed, cheap
+    // resolution regardless of camera resolution; drawImage() upscaling it
+    // back out in updateOcclusion() is free (GPU-composited) and the
+    // bilinear blur that comes along with that upscale is a *better* look
+    // for a cutout edge than a razor-sharp per-pixel mask anyway.
+    this._segScratch = document.createElement("canvas");
+    this._segScratchW = 480; // ~4x fewer pixels per axis vs 1280 typical
   }
 
   /** Lazily loads MediaPipe's ObjectDetector + the model. Safe to call multiple times. */
@@ -292,6 +312,7 @@ export class VisionSystem {
     this._depthMap = null;
     this._segHasFrame = false;
     this._maskSmooth = null; // drop stale smoothing state so a restart doesn't blend against last session's mask
+    this._depthSmooth = null; // same, for depth
     this._clearDebug();
   }
 
@@ -304,7 +325,10 @@ export class VisionSystem {
   setRealDepthEnabled(v) {
     this._wantRealDepth = !!v;
     if (this._wantRealDepth && !this.depthPipeline) this._ensureDepthLoaded();
-    if (!this._wantRealDepth) this._depthMap = null; // drop stale map immediately
+    if (!this._wantRealDepth) {
+      this._depthMap = null; // drop stale map immediately
+      this._depthSmooth = null;
+    }
   }
 
   /** Toggle person segmentation on/off. Lazily loads on first enable. */
@@ -460,14 +484,32 @@ export class VisionSystem {
       // value = physically closer. Convert to our 0 (near) .. 1 (far)
       // convention while copying into a plain Float32Array.
       const n = depthImg.width * depthImg.height;
-      const data = new Float32Array(n);
       const src = depthImg.data; // Uint8ClampedArray, single channel (or RGBA — handle both)
       const channels = src.length / n;
-      for (let i = 0; i < n; i++) {
-        const v = src[i * channels] / 255; // 0..1, closer = higher
-        data[i] = 1 - v; // flip to our near=0..far=1 convention
+
+      // Reset the smoothing buffer if resolution changed (first frame, or
+      // the model/input size changed) rather than blending stale data of
+      // the wrong shape into the new one.
+      if (!this._depthSmooth || this._depthSmooth.length !== n) {
+        this._depthSmooth = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+          const v = src[i * channels] / 255;
+          this._depthSmooth[i] = 1 - v; // seed with this frame's raw values
+        }
+      } else {
+        const k = this._depthSmoothFactor;
+        for (let i = 0; i < n; i++) {
+          const v = src[i * channels] / 255;
+          const raw = 1 - v;
+          this._depthSmooth[i] += (raw - this._depthSmooth[i]) * k;
+        }
       }
-      this._depthMap = { data, width: depthImg.width, height: depthImg.height };
+
+      this._depthMap = {
+        data: this._depthSmooth,
+        width: depthImg.width,
+        height: depthImg.height,
+      };
       this._depthVersion++;
     } catch (err) {
       console.error("[VisionSystem] depth estimation error:", err);
@@ -487,7 +529,18 @@ export class VisionSystem {
   _runSegmentation(video, vw, vh) {
     this._maskBusy = true;
     try {
-      const result = this.segmenter.segmentForVideo(video, performance.now());
+      // Downscale before handing to the segmenter (see _segScratch comment
+      // in the constructor) — keeps the returned categoryMask, and every
+      // loop downstream that reads it, cheap and resolution-independent.
+      const SW = this._segScratchW;
+      const SH = Math.max(1, Math.round((vh / vw) * SW));
+      const scratch = this._segScratch;
+      if (scratch.width !== SW || scratch.height !== SH) {
+        scratch.width = SW;
+        scratch.height = SH;
+      }
+      scratch.getContext("2d").drawImage(video, 0, 0, SW, SH);
+      const result = this.segmenter.segmentForVideo(scratch, performance.now());
       const categoryMask = result && result.categoryMask;
       if (!categoryMask) return;
       const maskArr = categoryMask.getAsUint8Array(); // 0/1 per pixel (or per-category index)
@@ -519,7 +572,12 @@ export class VisionSystem {
         canvas.width = mw;
         canvas.height = mh;
       }
-      const ctx = canvas.getContext("2d");
+      // willReadFrequently: this canvas is read back via getImageData in
+      // _buildPixelOcclusionStencil() every time the mask changes — without
+      // this hint Chrome keeps warning (correctly) that it's picked a
+      // GPU-backed context that makes repeated readback slower than it
+      // needs to be.
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
       const imgData = ctx.createImageData(mw, mh);
       const smooth = this._maskSmooth;
       for (let i = 0; i < n; i++) {
@@ -663,7 +721,9 @@ export class VisionSystem {
     const mw = maskCanvas.width, mh = maskCanvas.height;
     if (!mw || !mh) return null;
 
-    const maskData = maskCanvas.getContext("2d").getImageData(0, 0, mw, mh).data;
+    const maskData = maskCanvas
+      .getContext("2d", { willReadFrequently: true })
+      .getImageData(0, 0, mw, mh).data;
     const { data: dData, width: dw, height: dh } = this._depthMap;
 
     const stencil = this._occlusionStencilCanvas;
@@ -671,22 +731,42 @@ export class VisionSystem {
       stencil.width = mw;
       stencil.height = mh;
     }
-    const outCtx = stencil.getContext("2d");
+    const outCtx = stencil.getContext("2d", { willReadFrequently: true });
     const outImg = outCtx.createImageData(mw, mh);
     const out = outImg.data;
 
+    // Bilinear depth lookup instead of nearest-neighbor: the depth map
+    // (256x144) is much lower-res than the mask it's being sampled against,
+    // so a nearest-neighbor Math.round produced a visibly blocky,
+    // stair-stepped occlusion edge. Interpolating across the 4 nearest
+    // depth samples gives a smooth boundary that tracks the mask's own
+    // (already-smooth) silhouette instead of the depth grid.
     for (let y = 0; y < mh; y++) {
       const ny = (y + 0.5) / mh;
-      const dy = Math.min(dh - 1, Math.max(0, Math.round(ny * dh)));
-      const dRowOffset = dy * dw;
+      const fy = ny * dh - 0.5;
+      const y0 = Math.min(dh - 1, Math.max(0, Math.floor(fy)));
+      const y1 = Math.min(dh - 1, y0 + 1);
+      const ty = Math.min(1, Math.max(0, fy - y0));
       for (let x = 0; x < mw; x++) {
         const i = (y * mw + x) * 4;
         const alpha = maskData[i + 3];
         if (alpha === 0) continue; // out[i+3] already 0 from createImageData
+
         const nx = (x + 0.5) / mw;
-        const dx = Math.min(dw - 1, Math.max(0, Math.round(nx * dw)));
-        const occludes = dData[dRowOffset + dx] < avatarDepth;
-        if (!occludes) continue;
+        const fx = nx * dw - 0.5;
+        const x0 = Math.min(dw - 1, Math.max(0, Math.floor(fx)));
+        const x1 = Math.min(dw - 1, x0 + 1);
+        const tx = Math.min(1, Math.max(0, fx - x0));
+
+        const d00 = dData[y0 * dw + x0];
+        const d10 = dData[y0 * dw + x1];
+        const d01 = dData[y1 * dw + x0];
+        const d11 = dData[y1 * dw + x1];
+        const dTop = d00 + (d10 - d00) * tx;
+        const dBot = d01 + (d11 - d01) * tx;
+        const depth = dTop + (dBot - dTop) * ty;
+
+        if (depth >= avatarDepth) continue;
         out[i] = 255; out[i + 1] = 255; out[i + 2] = 255;
         out[i + 3] = alpha;
       }
